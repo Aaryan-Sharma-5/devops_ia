@@ -1,0 +1,5 @@
+2026-10-12 21:08:58.395 P00   INFO: expire command begin 2.59.3: --exec-id=309-f6d7a82a --log-level-console=info --log-level-file=debug --repo1-path=/var/lib/pgbackrest --repo1-retention-full=1 --stanza=stagepass
+2026-10-12 21:08:58.396 P00   INFO: repo1: expire full backup 20261012-210804F
+2026-10-12 21:08:58.412 P00   INFO: repo1: remove expired backup 20261012-210804F
+2026-10-12 21:08:58.426 P00   INFO: repo1: 17-1 remove archive, start = 00000003000000000000001B, stop = 00000003000000000000001C
+2026-10-12 21:08:58.426 P00   INFO: expire command end: completed successfully (33ms)

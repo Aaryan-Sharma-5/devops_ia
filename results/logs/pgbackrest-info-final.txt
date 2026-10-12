@@ -1,0 +1,32 @@
+stanza: stagepass
+    status: ok
+    cipher: none
+
+    db (current)
+        wal archive min/max (17): 00000003000000000000001B/000000030000000000000021
+
+        full backup: 20261012-210804F
+            timestamp start/stop: 2026-10-12 21:08:04+00 / 2026-10-12 21:08:13+00
+            wal start/stop: 00000003000000000000001B / 00000003000000000000001B
+            database size: 33.5MB, database backup size: 33.5MB
+            repo1: backup set size: 4.5MB, backup size: 4.5MB
+
+        full backup: 20261012-210822F
+            timestamp start/stop: 2026-10-12 21:08:22+00 / 2026-10-12 21:08:32+00
+            wal start/stop: 00000003000000000000001D / 00000003000000000000001D
+            database size: 33.5MB, database backup size: 33.5MB
+            repo1: backup set size: 4.5MB, backup size: 4.5MB
+
+        diff backup: 20261012-210822F_20261012-210833D
+            timestamp start/stop: 2026-10-12 21:08:33+00 / 2026-10-12 21:08:35+00
+            wal start/stop: 00000003000000000000001F / 00000003000000000000001F
+            database size: 33.5MB, database backup size: 3.9MB
+            repo1: backup set size: 4.5MB, backup size: 697.7KB
+            backup reference total: 1 full
+
+        incr backup: 20261012-210822F_20261012-210836I
+            timestamp start/stop: 2026-10-12 21:08:36+00 / 2026-10-12 21:08:38+00
+            wal start/stop: 000000030000000000000021 / 000000030000000000000021
+            database size: 33.5MB, database backup size: 3.4MB
+            repo1: backup set size: 4.5MB, backup size: 635.8KB
+            backup reference total: 1 full, 1 diff

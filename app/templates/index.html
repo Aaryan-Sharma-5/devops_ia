@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StagePass — {{ hero.title if hero else 'Events' }}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◉</span> StagePass</div>
+  <nav><a href="/">Events</a><a href="/admin">Operations</a></nav>
+</header>
+
+{% if flash %}
+<div class="flash {{ 'ok' if flash_ok else 'err' }}">{{ flash }}</div>
+{% endif %}
+
+{% if hero %}
+<section class="hero">
+  <svg class="hero-motif" viewBox="0 0 200 60" aria-hidden="true">
+    <g fill="none" stroke="#e8a13c" stroke-width="1.4" opacity="0.85">
+      <circle cx="20" cy="30" r="9"/><circle cx="20" cy="30" r="4"/>
+      <circle cx="60" cy="30" r="9"/><circle cx="60" cy="30" r="4"/>
+      <circle cx="100" cy="30" r="9"/><circle cx="100" cy="30" r="4"/>
+      <circle cx="140" cy="30" r="9"/><circle cx="140" cy="30" r="4"/>
+      <circle cx="180" cy="30" r="9"/><circle cx="180" cy="30" r="4"/>
+    </g>
+  </svg>
+  <div class="date-badge"><span class="d">12</span><span class="m">OCT</span></div>
+  <p class="kicker">KJSCE presents</p>
+  <h1>{{ hero.title }}</h1>
+  <p class="sub">{{ hero.description }}</p>
+  <div class="meta">
+    <span>📍 {{ hero.venue }}</span>
+    <span>🕖 {{ hero.timing }}</span>
+    <span>🎟 {{ hero.ticket_info }}</span>
+  </div>
+  <div class="hero-cta">
+    <a class="btn primary" href="#register">Register Now</a>
+    <span class="count-pill">{{ summary.garba_bookings }} Garba registrations live from DB</span>
+  </div>
+</section>
+
+<section class="grid">
+  <div class="card" id="register">
+    <h2>Register for {{ hero.title }}</h2>
+    <form method="post" action="/register/{{ hero.slug }}">
+      <label>Attendee name<input name="name" required minlength="2" maxlength="120" placeholder="e.g. Aarav Shah"></label>
+      <label>Email<input name="email" type="email" required placeholder="attendee001@example.test"></label>
+      <label>Tickets<input name="tickets" type="number" min="1" max="10" value="1"></label>
+      <button class="btn primary" type="submit">Confirm registration</button>
+    </form>
+    <p class="hint">Synthetic demo data only — addresses like <code>attendee001@example.test</code>. No emails sent, no payments.</p>
+  </div>
+  <div class="card stats">
+    <h2>Live operations snapshot</h2>
+    <div class="stat-row"><span>Total bookings</span><strong>{{ summary.total_bookings }}</strong></div>
+    <div class="stat-row"><span>Attendees</span><strong>{{ summary.total_attendees }}</strong></div>
+    {% for r in summary.per_event %}
+    <div class="stat-row"><span>{{ r.title }}</span><strong>{{ r.bookings }}</strong></div>
+    {% endfor %}
+    <p class="db-health">DB: {{ summary.db.status }}</p>
+    <a class="btn ghost" href="/admin">Open dashboard</a>
+  </div>
+</section>
+
+<section class="more">
+  <h2>More events</h2>
+  <div class="cards">
+  {% for e in others %}
+    <div class="mini">
+      <h3>{{ e.title }}</h3>
+      <p>{{ e.description }}</p>
+      <p class="mini-meta">{{ e.venue }} · {{ e.timing }}</p>
+      <a class="btn ghost" href="/api/events/{{ e.slug }}/registrations">View registrations (JSON)</a>
+    </div>
+  {% endfor %}
+  </div>
+</section>
+{% else %}
+<p class="empty">No events seeded yet. Run <code>make seed</code>.</p>
+{% endif %}
+<footer>StagePass demo · KJSCE Garba Eve — 12 October · research: pgBackRest WAL PITR vs snapshot-only rsync</footer>
+</body>
+</html>

@@ -1,0 +1,137 @@
+ting any active transactions
+stagepass-db  | 2026-10-12 21:02:36.489 UTC [80] FATAL:  terminating connection due to administrator command
+stagepass-db  | 2026-10-12 21:02:36.490 UTC [1] LOG:  background worker "logical replication launcher" (PID 35) exited with exit code 1
+stagepass-db  | 2026-10-12 21:02:36.491 UTC [29] LOG:  shutting down
+stagepass-db  | 2026-10-12 21:02:37.105 UTC [29] LOG:  checkpoint starting: shutdown immediate
+stagepass-db  | 2026-10-12 21:02:37.148 UTC [90] FATAL:  the database system is shutting down
+stagepass-db  | 2026-10-12 21:02:37.151 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000012] --exec-id=89-897bbd99 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:02:37.283 P00   INFO: pushed WAL file '000000020000000000000012' to the archive
+stagepass-db  | 2026-10-12 21:02:37.283 P00   INFO: archive-push command end: completed successfully (134ms)
+stagepass-db  | 2026-10-12 21:02:37.335 UTC [29] LOG:  checkpoint complete: wrote 17 buffers (0.1%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.054 s, sync=0.087 s, total=0.246 s; sync files=15, longest=0.028 s, average=0.006 s; distance=16384 kB, estimate=16384 kB; lsn=0/13000028, redo lsn=0/13000028
+stagepass-db  | 2026-10-12 21:02:37.341 UTC [1] LOG:  database system is shut down
+stagepass-db  | 
+stagepass-db  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+stagepass-db  | 
+stagepass-db  | 2026-10-12 21:02:43.931 UTC [1] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+stagepass-db  | 2026-10-12 21:02:43.931 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+stagepass-db  | 2026-10-12 21:02:43.931 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+stagepass-db  | 2026-10-12 21:02:43.960 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+stagepass-db  | 2026-10-12 21:02:43.999 UTC [32] LOG:  database system was shut down at 2026-10-12 21:02:25 UTC
+stagepass-db  | 2026-10-12 21:02:44.013 UTC [1] LOG:  database system is ready to accept connections
+stagepass-db  | 2026-10-12 21:02:52.276 UTC [66] LOG:  restore point "pgBackRest Archive Check" created at 0/1201DA08
+stagepass-db  | 2026-10-12 21:02:52.276 UTC [66] STATEMENT:  select pg_catalog.pg_create_restore_point('pgBackRest Archive Check')::text
+stagepass-db  | 2026-10-12 21:02:53.004 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000012] --exec-id=68-4b9a1df4 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:02:53.106 P00   INFO: pushed WAL file '000000020000000000000012' to the archive
+stagepass-db  | 2026-10-12 21:02:53.106 P00   INFO: archive-push command end: completed successfully (104ms)
+stagepass-db  | 2026-10-12 21:02:53.211 UTC [30] LOG:  checkpoint starting: immediate force wait
+stagepass-db  | 2026-10-12 21:02:53.603 UTC [30] LOG:  checkpoint complete: wrote 25 buffers (0.2%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.047 s, sync=0.063 s, total=0.392 s; sync files=21, longest=0.017 s, average=0.003 s; distance=16384 kB, estimate=16384 kB; lsn=0/13000080, redo lsn=0/13000028
+stagepass-db  | 2026-10-12 21:02:53.603 UTC [76] LOG:  restore point "pgBackRest Archive Check" created at 0/13000160
+stagepass-db  | 2026-10-12 21:02:53.603 UTC [76] STATEMENT:  select pg_catalog.pg_create_restore_point('pgBackRest Archive Check')::text
+stagepass-db  | 2026-10-12 21:02:54.628 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000013] --exec-id=85-b7ef1530 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:02:54.758 P00   INFO: pushed WAL file '000000020000000000000013' to the archive
+stagepass-db  | 2026-10-12 21:02:54.758 P00   INFO: archive-push command end: completed successfully (132ms)
+stagepass-db  | 2026-10-12 21:03:04.637 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000013.00000028.backup] --exec-id=98-2a5cd90c --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:03:04.649 P00   INFO: pushed WAL file '000000020000000000000013.00000028.backup' to the archive
+stagepass-db  | 2026-10-12 21:03:04.650 P00   INFO: archive-push command end: completed successfully (15ms)
+stagepass-db  | 2026-10-12 21:03:04.659 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000014] --exec-id=100-8fde8665 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:03:04.756 P00   INFO: pushed WAL file '000000020000000000000014' to the archive
+stagepass-db  | 2026-10-12 21:03:04.756 P00   INFO: archive-push command end: completed successfully (99ms)
+stagepass-db  | 2026-10-12 21:03:05.952 UTC [164] LOG:  restore point "stagepass_before_incident_pgbackrest_run2" created at 0/1500C978
+stagepass-db  | 2026-10-12 21:03:05.952 UTC [164] STATEMENT:  SELECT pg_create_restore_point('stagepass_before_incident_pgbackrest_run2')
+stagepass-db  | 2026-10-12 21:03:06.022 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000015] --exec-id=166-a3c7543a --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:03:06.143 P00   INFO: pushed WAL file '000000020000000000000015' to the archive
+stagepass-db  | 2026-10-12 21:03:06.143 P00   INFO: archive-push command end: completed successfully (123ms)
+stagepass-db  | 2026-10-12 21:04:06.741 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000016] --exec-id=271-99e30e00 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:04:06.834 P00   INFO: pushed WAL file '000000020000000000000016' to the archive
+stagepass-db  | 2026-10-12 21:04:06.834 P00   INFO: archive-push command end: completed successfully (95ms)
+stagepass-db  | 2026-10-12 21:07:26.119 UTC [625] LOG:  restore point "pgBackRest Archive Check" created at 0/1701B3B8
+stagepass-db  | 2026-10-12 21:07:26.119 UTC [625] STATEMENT:  select pg_catalog.pg_create_restore_point('pgBackRest Archive Check')::text
+stagepass-db  | 2026-10-12 21:07:26.179 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000017] --exec-id=627-18f1fc2a --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:26.275 P00   INFO: pushed WAL file '000000020000000000000017' to the archive
+stagepass-db  | 2026-10-12 21:07:26.275 P00   INFO: archive-push command end: completed successfully (98ms)
+stagepass-db  | 2026-10-12 21:07:26.585 UTC [30] LOG:  checkpoint starting: immediate force wait
+stagepass-db  | 2026-10-12 21:07:26.701 UTC [30] LOG:  checkpoint complete: wrote 27 buffers (0.2%); 0 WAL file(s) added, 0 removed, 5 recycled; write=0.005 s, sync=0.015 s, total=0.117 s; sync files=25, longest=0.005 s, average=0.001 s; distance=81920 kB, estimate=81920 kB; lsn=0/18000080, redo lsn=0/18000028
+stagepass-db  | 2026-10-12 21:07:26.702 UTC [635] LOG:  restore point "pgBackRest Archive Check" created at 0/18000160
+stagepass-db  | 2026-10-12 21:07:26.702 UTC [635] STATEMENT:  select pg_catalog.pg_create_restore_point('pgBackRest Archive Check')::text
+stagepass-db  | 2026-10-12 21:07:26.750 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000018] --exec-id=637-8fce59ff --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:26.835 P00   INFO: pushed WAL file '000000020000000000000018' to the archive
+stagepass-db  | 2026-10-12 21:07:26.835 P00   INFO: archive-push command end: completed successfully (86ms)
+stagepass-db  | 2026-10-12 21:07:33.462 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000019] --exec-id=657-5001781f --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:33.567 P00   INFO: pushed WAL file '000000020000000000000019' to the archive
+stagepass-db  | 2026-10-12 21:07:33.567 P00   INFO: archive-push command end: completed successfully (107ms)
+stagepass-db  | 2026-10-12 21:07:33.577 P00   INFO: archive-push command begin 2.59.3: [pg_wal/000000020000000000000018.00000028.backup] --exec-id=659-d27dd13e --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:33.585 P00   INFO: pushed WAL file '000000020000000000000018.00000028.backup' to the archive
+stagepass-db  | 2026-10-12 21:07:33.585 P00   INFO: archive-push command end: completed successfully (10ms)
+stagepass-db  | 2026-10-12 21:07:34.373 UTC [714] LOG:  restore point "stagepass_before_incident_pgbackrest_run2" created at 0/1A00CC28
+stagepass-db  | 2026-10-12 21:07:34.373 UTC [714] STATEMENT:  SELECT pg_create_restore_point('stagepass_before_incident_pgbackrest_run2')
+stagepass-db  | 2026-10-12 21:07:34.433 P00   INFO: archive-push command begin 2.59.3: [pg_wal/00000002000000000000001A] --exec-id=716-a472d3bf --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:34.562 P00   INFO: pushed WAL file '00000002000000000000001A' to the archive
+stagepass-db  | 2026-10-12 21:07:34.562 P00   INFO: archive-push command end: completed successfully (131ms)
+stagepass-db  | 2026-10-12 21:07:39.984 UTC [1] LOG:  received fast shutdown request
+stagepass-db  | 2026-10-12 21:07:40.011 UTC [1] LOG:  aborting any active transactions
+stagepass-db  | 2026-10-12 21:07:40.012 UTC [714] FATAL:  terminating connection due to administrator command
+stagepass-db  | 2026-10-12 21:07:40.014 UTC [1] LOG:  background worker "logical replication launcher" (PID 36) exited with exit code 1
+stagepass-db  | 2026-10-12 21:07:40.015 UTC [30] LOG:  shutting down
+stagepass-db  | 2026-10-12 21:07:40.717 P00   INFO: archive-push command begin 2.59.3: [pg_wal/00000002000000000000001B] --exec-id=727-93e7c44c --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:40.735 UTC [30] LOG:  checkpoint starting: shutdown immediate
+stagepass-db  | 2026-10-12 21:07:40.849 P00   INFO: pushed WAL file '00000002000000000000001B' to the archive
+stagepass-db  | 2026-10-12 21:07:40.849 P00   INFO: archive-push command end: completed successfully (134ms)
+stagepass-db  | 2026-10-12 21:07:41.102 UTC [30] LOG:  checkpoint complete: wrote 14 buffers (0.1%); 0 WAL file(s) added, 0 removed, 4 recycled; write=0.069 s, sync=0.105 s, total=0.395 s; sync files=13, longest=0.044 s, average=0.009 s; distance=65536 kB, estimate=80281 kB; lsn=0/1C000028, redo lsn=0/1C000028
+stagepass-db  | 2026-10-12 21:07:41.107 UTC [1] LOG:  database system is shut down
+stagepass-db  | 
+stagepass-db  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+stagepass-db  | 
+stagepass-db  | 2026-10-12 21:07:57.479 UTC [1] LOG:  starting PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+stagepass-db  | 2026-10-12 21:07:57.479 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+stagepass-db  | 2026-10-12 21:07:57.479 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+stagepass-db  | 2026-10-12 21:07:57.487 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+stagepass-db  | 2026-10-12 21:07:57.496 UTC [31] LOG:  database system was interrupted; last known up at 2026-10-12 21:07:26 UTC
+stagepass-db  | 2026-10-12 21:07:57.563 P00   INFO: archive-get command begin 2.59.3: [00000003.history, pg_wal/RECOVERYHISTORY] --exec-id=33-6705588b --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:57.564 P00   INFO: unable to find 00000003.history in the archive
+stagepass-db  | 2026-10-12 21:07:57.564 P00   INFO: archive-get command end: completed successfully (3ms)
+stagepass-db  | 2026-10-12 21:07:57.565 UTC [31] LOG:  starting backup recovery with redo LSN 0/18000028, checkpoint LSN 0/18000080, on timeline ID 2
+stagepass-db  | 2026-10-12 21:07:57.573 P00   INFO: archive-get command begin 2.59.3: [00000002.history, pg_wal/RECOVERYHISTORY] --exec-id=35-7091d28f --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:57.573 P00   INFO: unable to find 00000002.history in the archive
+stagepass-db  | 2026-10-12 21:07:57.573 P00   INFO: archive-get command end: completed successfully (2ms)
+stagepass-db  | 2026-10-12 21:07:57.581 P00   INFO: archive-get command begin 2.59.3: [000000020000000000000018, pg_wal/RECOVERYXLOG] --exec-id=37-b6cd54de --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:57.601 P00   INFO: found 000000020000000000000018 in the repo1: 17-1 archive
+stagepass-db  | 2026-10-12 21:07:57.601 P00   INFO: archive-get command end: completed successfully (22ms)
+stagepass-db  | 2026-10-12 21:07:57.602 UTC [31] LOG:  restored log file "000000020000000000000018" from archive
+stagepass-db  | 2026-10-12 21:07:57.650 UTC [31] LOG:  starting point-in-time recovery to "stagepass_before_incident_pgbackrest_run2"
+stagepass-db  | 2026-10-12 21:07:57.658 UTC [31] LOG:  redo starts at 0/18000028
+stagepass-db  | 2026-10-12 21:07:57.665 P00   INFO: archive-get command begin 2.59.3: [000000020000000000000019, pg_wal/RECOVERYXLOG] --exec-id=39-8953ef27 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:57.693 P00   INFO: found 000000020000000000000019 in the repo1: 17-1 archive
+stagepass-db  | 2026-10-12 21:07:57.693 P00   INFO: archive-get command end: completed successfully (29ms)
+stagepass-db  | 2026-10-12 21:07:57.694 UTC [31] LOG:  restored log file "000000020000000000000019" from archive
+stagepass-db  | 2026-10-12 21:07:57.750 P00   INFO: archive-get command begin 2.59.3: [00000002000000000000001A, pg_wal/RECOVERYXLOG] --exec-id=41-de71fc9b --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:57.795 P00   INFO: found 00000002000000000000001A in the repo1: 17-1 archive
+stagepass-db  | 2026-10-12 21:07:57.795 P00   INFO: archive-get command end: completed successfully (47ms)
+stagepass-db  | 2026-10-12 21:07:57.796 UTC [31] LOG:  restored log file "00000002000000000000001A" from archive
+stagepass-db  | 2026-10-12 21:07:57.842 UTC [31] LOG:  completed backup recovery with redo LSN 0/18000028 and end LSN 0/19000050
+stagepass-db  | 2026-10-12 21:07:57.842 UTC [31] LOG:  consistent recovery state reached at 0/19000050
+stagepass-db  | 2026-10-12 21:07:57.842 UTC [1] LOG:  database system is ready to accept read-only connections
+stagepass-db  | 2026-10-12 21:07:57.853 P00   INFO: archive-get command begin 2.59.3: [00000002000000000000001B, pg_wal/RECOVERYXLOG] --exec-id=43-6055620e --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:57.905 P00   INFO: found 00000002000000000000001B in the repo1: 17-1 archive
+stagepass-db  | 2026-10-12 21:07:57.905 P00   INFO: archive-get command end: completed successfully (54ms)
+stagepass-db  | 2026-10-12 21:07:57.906 UTC [31] LOG:  restored log file "00000002000000000000001B" from archive
+stagepass-db  | 2026-10-12 21:07:57.946 UTC [31] LOG:  recovery stopping at restore point "stagepass_before_incident_pgbackrest_run2", time 2026-10-12 21:07:34.373235+00
+stagepass-db  | 2026-10-12 21:07:57.946 UTC [31] LOG:  redo done at 0/1A00CBC0 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.28 s
+stagepass-db  | 2026-10-12 21:07:57.946 UTC [31] LOG:  last completed transaction was at log time 2026-10-12 21:07:34.32615+00
+stagepass-db  | 2026-10-12 21:07:57.961 P00   INFO: archive-get command begin 2.59.3: [00000002000000000000001A, pg_wal/RECOVERYXLOG] --exec-id=45-0564b486 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:58.006 P00   INFO: found 00000002000000000000001A in the repo1: 17-1 archive
+stagepass-db  | 2026-10-12 21:07:58.006 P00   INFO: archive-get command end: completed successfully (47ms)
+stagepass-db  | 2026-10-12 21:07:58.008 UTC [31] LOG:  restored log file "00000002000000000000001A" from archive
+stagepass-db  | 2026-10-12 21:07:58.070 P00   INFO: archive-get command begin 2.59.3: [00000003.history, pg_wal/RECOVERYHISTORY] --exec-id=47-f78b7530 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:58.070 P00   INFO: unable to find 00000003.history in the archive
+stagepass-db  | 2026-10-12 21:07:58.070 P00   INFO: archive-get command end: completed successfully (2ms)
+stagepass-db  | 2026-10-12 21:07:58.072 UTC [31] LOG:  selected new timeline ID: 3
+stagepass-db  | 2026-10-12 21:07:58.141 P00   INFO: archive-get command begin 2.59.3: [00000002.history, pg_wal/RECOVERYHISTORY] --exec-id=49-f41c6323 --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:58.141 P00   INFO: unable to find 00000002.history in the archive
+stagepass-db  | 2026-10-12 21:07:58.141 P00   INFO: archive-get command end: completed successfully (3ms)
+stagepass-db  | 2026-10-12 21:07:58.150 UTC [31] LOG:  archive recovery complete
+stagepass-db  | 2026-10-12 21:07:58.155 UTC [29] LOG:  checkpoint starting: end-of-recovery immediate wait
+stagepass-db  | 2026-10-12 21:07:58.203 UTC [29] LOG:  checkpoint complete: wrote 17 buffers (0.1%); 0 WAL file(s) added, 0 removed, 2 recycled; write=0.009 s, sync=0.017 s, total=0.053 s; sync files=14, longest=0.005 s, average=0.002 s; distance=32819 kB, estimate=32819 kB; lsn=0/1A00CC28, redo lsn=0/1A00CC28
+stagepass-db  | 2026-10-12 21:07:58.214 UTC [1] LOG:  database system is ready to accept connections
+stagepass-db  | 2026-10-12 21:07:58.222 P00   INFO: archive-push command begin 2.59.3: [pg_wal/00000003.history] --exec-id=55-68442a1f --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/data/pgdata --repo1-path=/var/lib/pgbackrest --stanza=stagepass
+stagepass-db  | 2026-10-12 21:07:58.230 P00   INFO: pushed WAL file '00000003.history' to the archive
+stagepass-db  | 2026-10-12 21:07:58.230 P00   INFO: archive-push command end: completed successfully (10ms)

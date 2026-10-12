@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StagePass Operations</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">◉</span> StagePass · Operations</div>
+  <nav><a href="/">Events</a><a href="/admin">Dashboard</a></nav>
+</header>
+<section class="wrap">
+  <h1>Operations dashboard <small>(live PostgreSQL counts)</small></h1>
+  <div class="kpis">
+    <div class="kpi garba"><span>KJSCE Garba Eve bookings</span><strong>{{ summary.garba_bookings }}</strong></div>
+    <div class="kpi"><span>Total bookings</span><strong>{{ summary.total_bookings }}</strong></div>
+    <div class="kpi"><span>Attendees</span><strong>{{ summary.total_attendees }}</strong></div>
+    <div class="kpi"><span>DB health</span><strong>{{ summary.db.status }}</strong></div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h2>Registrations per event</h2>
+      <table>
+        <tr><th>Event</th><th>Bookings</th><th>Tickets</th></tr>
+        {% for r in summary.per_event %}
+        <tr><td>{{ r.title }} <code>{{ r.slug }}</code></td><td>{{ r.bookings }}</td><td>{{ r.tickets }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    <div class="card">
+      <h2>Recent registrations</h2>
+      <table>
+        <tr><th>Booking</th><th>Event</th><th>Name</th><th>Tickets</th></tr>
+        {% for r in summary.recent %}
+        <tr><td><code>{{ r.booking_id }}</code></td><td>{{ r.event_slug }}</td><td>{{ r.name }}</td><td>{{ r.tickets }}</td></tr>
+        {% endfor %}
+      </table>
+      <p class="hint">Counts refresh from PostgreSQL on every load — recovery state is visible here, never hardcoded.</p>
+    </div>
+  </div>
+</section>
+<footer>StagePass ops · benchmark reference counts (if any) are shown only alongside, never mixed into live counts.</footer>
+</body>
+</html>

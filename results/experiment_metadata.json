@@ -1,0 +1,11 @@
+{
+  "postgres": "PostgreSQL 17.11 (Debian 17.11-1.pgdg12+2) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+  "pgbackrest": "pgBackRest 2.59.3",
+  "docker": "Docker version 29.8.1, build 4a63305d74",
+  "compose": "Docker Compose version 5.5.1",
+  "host": {
+    "os": "NAME=\"Arch Linux\"",
+    "platform": "Linux-7.2.6-arch2-1-x86_64-with-glibc2.44",
+    "cpus": 8
+  }
+}

@@ -1,0 +1,4 @@
+trial,backup_type,rows,duration_s,backup_label,repo_bytes_after,db_bytes,notes
+1,full,20000,10.6,20261012-210822F,12137779,3989504,dbsize=3896 kB
+1,differential,20000,2.5,20261012-210822F_20261012-210833D,14338561,3989504,mutated ~5% rows (id%20==0); page-level WAL means artifact ratio differs
+1,incremental,20000,3.0,20261012-210822F_20261012-210836I,16284776,3989504,mutated another ~5% (id%20==7)

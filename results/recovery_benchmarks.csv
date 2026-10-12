@@ -1,0 +1,2 @@
+method,dump_duration_s,artifact_bytes,restore_duration_s,selective_restore,wal_replay
+pg_dump-Fc,0.3,507577,1.4,yes,no-by-itself

@@ -1,0 +1,83 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: docker/db.Dockerfile
+    container_name: stagepass-db
+    environment:
+      POSTGRES_USER: stagepass
+      POSTGRES_PASSWORD: stagepass
+      POSTGRES_DB: stagepass
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - pgbackrest-repo:/var/lib/pgbackrest
+      - ./docker/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
+      - ./docker/initdb-postgres-role.sql:/docker-entrypoint-initdb.d/10-postgres-role.sql:ro
+    ports:
+      - "5433:5432"
+    command:
+      - postgres
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=pgbackrest --stanza=stagepass archive-push %p
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=5
+      - -c
+      - archive_timeout=60
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stagepass -d stagepass"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+    entrypoint: ["/usr/local/bin/db-entrypoint.sh"]
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+    container_name: stagepass-app
+    environment:
+      DATABASE_URL: postgresql://stagepass:stagepass@db:5432/stagepass
+      STAGEPASS_LAB: "1"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  backup-tools:
+    build:
+      context: .
+      dockerfile: docker/tools.Dockerfile
+    container_name: stagepass-tools
+    environment:
+      PGPASSWORD: stagepass
+      STAGEPASS_LAB: "1"
+    volumes:
+      - pgdata:/var/lib/postgresql/data:rw
+      - pgbackrest-repo:/var/lib/pgbackrest:rw
+      - rsync-snapshots:/snapshots:rw
+      - ./results:/work/results:rw
+      - ./sql:/work/sql:ro
+      - ./scripts:/work/scripts:ro
+      - ./docker/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["sleep", "infinity"]
+
+volumes:
+  pgdata:
+  pgbackrest-repo:
+  rsync-snapshots:
