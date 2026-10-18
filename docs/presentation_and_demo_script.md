@@ -1,14 +1,13 @@
 # Presentation + Live Demo Script (slide-by-slide, ~15 min talk + 7–10 min demo)
 
-Research question (say verbatim, slides 1/4/11): “How does pgBackRest with archived WAL
-improve PostgreSQL recoverability after accidental data loss compared with a consistent
-file-system snapshot alone, and what are the time and storage trade-offs of its backup strategies?”
+Topic: “Automated PostgreSQL Backup and Point-in-Time Recovery using pgBackRest”
+Focus statement: “This project demonstrates how pgBackRest automates PostgreSQL database backups, WAL archiving, and disaster recovery. It explores restoring a database to a specific point in time after accidental data loss, evaluating recovery time and reliability without requiring cloud infrastructure.”
 
 ## Slide 1 — Title (1 min)
-Say: “Good morning. Our IA studies PostgreSQL disaster recovery using pgBackRest — WAL
-archiving, point-in-time recovery and backup evaluation — demonstrated through StagePass,
-an event-registration platform whose flagship event is KJSCE Garba Eve on 12 October.
-Everything runs locally on Docker Compose: PostgreSQL 17.11 with pgBackRest 2.59.3.”
+Say: “Good morning. Our project explores Automated PostgreSQL Backup and Point-in-Time Recovery using pgBackRest.
+We demonstrate how pgBackRest automates database backups, WAL archiving, and disaster recovery without requiring
+cloud infrastructure, demonstrated through StagePass—an event-registration platform whose flagship event is
+KJSCE Garba Eve on 12 October. Everything runs locally on Docker Compose: PostgreSQL 17.11 with pgBackRest 2.59.3.”
 Point at: version line. Terms: WAL = write-ahead log, every change recorded first.
 No switch yet.
 

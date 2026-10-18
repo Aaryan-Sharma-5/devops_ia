@@ -24,9 +24,17 @@ benchmark:
 	STAGEPASS_LAB=1 DATABASE_URL=postgresql://stagepass:stagepass@localhost:5433/stagepass python3 scripts/benchmark.py --rows 20000 --trials 1 --with-dump
 
 report:
-	python3 scripts/compare.py
-	python3 scripts/build_report.py
-	python3 scripts/build_pptx.py
+	python3 scripts/compare.py || python scripts/compare.py
+	python3 scripts/build_report.py || python scripts/build_report.py
+	python3 scripts/build_report_pdf.py || python scripts/build_report_pdf.py
+	python3 scripts/build_presentation_template.py || python scripts/build_presentation_template.py
+
+presentation:
+	python3 scripts/build_presentation_template.py || python scripts/build_presentation_template.py
+
+pdf-report:
+	python3 scripts/build_report_pdf.py || python scripts/build_report_pdf.py
+
 
 clean:
 	docker compose down -v || true

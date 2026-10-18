@@ -1,10 +1,10 @@
-# StagePass + pgBackRest — DevOps IA Case Study
+# Automated PostgreSQL Backup and Point-in-Time Recovery using pgBackRest
 
-**PostgreSQL Disaster Recovery Using pgBackRest: WAL Archiving, Point-in-Time Recovery and Backup Evaluation**
+**Automating Database Backups, WAL Archiving, and Disaster Recovery without Cloud Infrastructure**
 
-> Research question: *How does pgBackRest with archived WAL improve PostgreSQL recoverability
-> after accidental data loss compared with a consistent file-system snapshot alone, and what are
-> the time and storage trade-offs of its backup strategies?*
+> **Project Focus:** This project demonstrates how pgBackRest automates PostgreSQL database backups,
+> WAL archiving, and disaster recovery. It explores restoring a database to a specific point in time
+> after accidental data loss, evaluating recovery time and reliability without requiring cloud infrastructure.
 
 **Measured headline:** snapshot-only rsync → 100/120 bookings (**20 new registrations lost**, ×2 runs);
 pgBackRest named PITR → 120/120 with **20/20 new registrations recovered** (×2 runs).
@@ -333,26 +333,32 @@ the lab repo (`results/logs/pgbackrest-expire-demo.txt`). Charts
 - `sql/` — `schema.sql` (events/attendees/bookings + indexes), `seed.sql` (100 deterministic
   bookings), `incident.sql` (controlled DELETE), `verify.sql`, `reset.sql`
 - `scripts/` — `workload.py`, `scenario_rsync.py`, `scenario_pgbackrest.py`, `benchmark.py`,
-  `compare.py`, `build_report.py`, `build_pptx.py`, `safety.py`, `common.py`, `seed_helper.py`
+  `compare.py`, `build_report.py`, `build_report_pdf.py`, `build_presentation_template.py`,
+  `build_presentation_pptxgenjs.js`, `safety.py`, `common.py`, `seed_helper.py`
 - `tests/test_api.py` — 8 regression tests (API, validation, seed idempotency, live dashboard
   cross-check, safety guards)
 - `docs/` — `IMPLEMENTATION_PLAN.md`, `API.md`, `EXPERIMENT_PROTOCOL.md`, **`RESULTS.md`**,
   `DEMO_RUNBOOK.md`, `SOURCES.md`, `presentation_and_demo_script.md`, `video_recording_script.md`,
-  `pgbackrest_case_study_report.docx` (+ `.md` source), `pgbackrest_ia_presentation.pptx`
+  `pgbackrest_case_study_report.docx` (+ `.md` source), `pgbackrest_case_study_report.pdf`,
+  `pgbackrest_ia_presentation.pptx`
 - `results/` — `experiment_runs.csv`, `backup_benchmarks.csv`, `recovery_benchmarks.csv`,
   `registration_requests.csv` (80/80 HTTP 200), `experiment_metadata.json`, `logs/`, `plots/`,
   `screenshots/`
 
 ## 11. Deliverables (report, PPT, scripts)
 
-- **Technical report** `docs/pgbackrest_case_study_report.docx` (+ editable
+- **Technical Report (DOCX & Markdown)** `docs/pgbackrest_case_study_report.docx` (+ editable
   `docs/pgbackrest_case_study_report.md` source): all 31 required sections — abstract through
   appendix — with real tables, generated charts, genuine screenshots, inline official-doc
-  citations and a references list. Regenerate: `python3 scripts/build_report.py`.
-- **Presentation** `docs/pgbackrest_ia_presentation.pptx`: 16:9, 12 slides, classroom-readable,
-  real screenshots/charts embedded, speaker notes included. Regenerate:
-  `python3 scripts/build_pptx.py` (validates 12 slides on save).
-- **Speaker + demo script** `docs/presentation_and_demo_script.md`: per-slide wording, terms to
+  citations, 100% black font styling, and a references list. Regenerate: `python3 scripts/build_report.py`.
+- **Publication-Ready PDF Report** `docs/pgbackrest_case_study_report.pdf`: generated via ReportLab
+  with running headers, footers (`Page X of Y`), institutional metadata, and 100% black font.
+  Regenerate: `python3 scripts/build_report_pdf.py`.
+- **Presentation Deck** `docs/pgbackrest_ia_presentation.pptx`: 16:9, 12 slides built upon the official
+  college template (`KJSSE  PPT Template.pptx`), with real screenshots/charts embedded, strict layout
+  boundaries (no overflow), and complete speaker notes. Regenerate:
+  `python3 scripts/build_presentation_template.py`.
+- **Speaker + Demo Script** `docs/presentation_and_demo_script.md`: per-slide wording, terms to
   explain, exact browser/terminal switch moments and expected outputs, 7–10 min run-of-show plus
   fallback plan. **Video script** `docs/video_recording_script.md`: pre-recording checklist, full
   take with timestamps, contingency procedure. **Demo runbook** `docs/DEMO_RUNBOOK.md`: minimal
