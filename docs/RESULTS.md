@@ -28,15 +28,15 @@ verified restore point, returning 120/40 with the incident DELETE absent. This c
 *snapshot-only strategy* with pgBackRest+WAL; rsync combined with a proper WAL strategy could
 do more — that combination was intentionally excluded from the baseline.
 
-## Experiment 2 — backup modes (bench 20,000 rows, `pg_total_relation_size` ≈ 3.9MB)
+## Experiment 2 — backup modes (bench 20,000 rows, table relation storage ≈ 3.9 MiB via `pg_total_relation_size`; pgBackRest cluster DB size = 33.5 MB)
 
-| type | duration | pgBackRest backup size* | DB size reported |
-|---|---|---|---|
-| full | 10.6s | 4.5MB | 33.5MB |
-| differential (~5% rows changed) | 2.5s | 697.7KB | 33.5MB |
-| incremental (another ~5%) | 3.0s | 635.8KB | 33.5MB |
+| type | duration | pgBackRest backup size* | DB size reported | cumulative repo (du -sb) |
+|---|---|---|---|---|
+| full | 10.6s | 4.50 MiB | 33.5 MB | 11.58 MiB (12.1 MB decimal) |
+| differential (~5% rows changed) | 2.5s | 697.7 KiB | 33.5 MB | 13.67 MiB (14.3 MB decimal) |
+| incremental (another ~5%) | 3.0s | 635.8 KiB | 33.5 MB | 15.53 MiB (16.3 MB decimal) |
 
-\*compressed repo bytes for this backup (`info`: `results/logs/pgbackrest-info-final.txt`).
+\*compressed repo bytes for this backup (`info`: `results/logs/pgbackrest-info-final.txt`). Note: The benchmark table occupied approximately 3.9 MiB of PostgreSQL relation storage; pgBackRest reported a 33.5 MB database size for the cluster used in the backup measurement. Individual backup size measures the new compressed data delta (Full: 4.50 MiB, Diff: 697.7 KiB, Incr: 635.8 KiB). Cumulative repository size reflects total disk footprint measured via `du -sb /var/lib/pgbackrest` immediately post-backup: Full = 11.58 MiB (12.1 MB decimal; 12,137,779 bytes), Diff = 13.67 MiB (14.3 MB decimal; 14,338,561 bytes), Incr = 15.53 MiB (16.3 MB decimal; 16,284,776 bytes).
 5% of SQL rows ≠ 5% of bytes: PostgreSQL writes whole pages and pgBackRest compresses;
 diff/incr are ~15%/~14% of the full artifact here, not 5%. Chart: `results/plots/backup_durations.png`.
 Single trial (lab constraints); medians need `--trials 3` on a bigger host. One stale full row

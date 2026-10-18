@@ -2,7 +2,8 @@
 
 Sequence on a separate bench_payload table (default 20000 rows, --rows to reduce):
   full -> mutate ~5% -> differential -> mutate -> incremental.
-Records durations, pgBackRest info sizes, repo size. Optional --with-dump for pg_dump/pg_restore timing.
+Records durations, individual backup set sizes, cumulative repository sizes.
+Optional --with-dump for pg_dump/pg_restore timing.
 Trials: --trials N (default 1; report medians when 3).
 """
 import argparse
@@ -30,6 +31,7 @@ def pbr(*args):
 
 
 def repo_bytes():
+    """Measure total cumulative repository size on disk."""
     r = subprocess.run(["docker", "compose", "exec", "-T", "backup-tools", "su", "postgres", "-c",
                         "du -sb /var/lib/pgbackrest | cut -f1"],
                        capture_output=True, text=True, timeout=60)
@@ -37,6 +39,7 @@ def repo_bytes():
 
 
 def last_backup_info():
+    """Extract individual backup delta size and backup set size from pgBackRest info."""
     r = subprocess.run(["docker", "compose", "exec", "-T", "db", "su", "postgres", "-c",
                         "pgbackrest --stanza=stagepass info --output=json"],
                        capture_output=True, text=True, timeout=120)
@@ -44,7 +47,11 @@ def last_backup_info():
     idx = max(txt.find("["), 0)
     meta = json.loads(txt[idx:])
     b = meta[0]["backup"][-1]
-    return b.get("label", ""), b.get("type", ""), b
+    # backup_size is the individual compressed backup delta; size is total backup set
+    b_info = b.get("info", {})
+    backup_size = b_info.get("delta", b_info.get("size", 0))
+    backup_set_size = b_info.get("size", backup_size)
+    return b.get("label", ""), b.get("type", ""), backup_size, backup_set_size, b
 
 
 def timed(fn):
@@ -69,7 +76,7 @@ def main():
         w = csv.writer(f)
         if new:
             w.writerow(["trial", "backup_type", "rows", "duration_s", "backup_label",
-                        "repo_bytes_after", "db_bytes", "notes"])
+                        "backup_size_bytes", "repository_total_bytes_after", "db_bytes", "notes"])
         for t in range(1, args.trials + 1):
             print(f"--- trial {t}: building {args.rows} bench rows ---", flush=True)
             with c.cursor() as cur:
@@ -84,24 +91,24 @@ def main():
             print(f"bench table size: {dbsize} ({dbbytes} bytes)", flush=True)
 
             (_, d_full), = [timed(lambda: pbr("--type=full", "backup"))]
-            label, _bt, _info = last_backup_info()
-            w.writerow([t, "full", args.rows, round(d_full, 1), label, repo_bytes(), dbbytes,
+            label, _bt, b_size, b_set_size, _info = last_backup_info()
+            w.writerow([t, "full", args.rows, round(d_full, 1), label, b_size, repo_bytes(), dbbytes,
                         f"dbsize={dbsize}"])
             f.flush()
 
             with c.cursor() as cur:  # mutate ~5%
                 cur.execute("UPDATE bench_payload SET payload=md5(payload||'d1'), updated=1 WHERE id % 20 = 0")
             (_, d_diff), = [timed(lambda: pbr("--type=diff", "backup"))]
-            label, _bt, _info = last_backup_info()
-            w.writerow([t, "differential", args.rows, round(d_diff, 1), label, repo_bytes(), dbbytes,
+            label, _bt, b_size, b_set_size, _info = last_backup_info()
+            w.writerow([t, "differential", args.rows, round(d_diff, 1), label, b_size, repo_bytes(), dbbytes,
                         "mutated ~5% rows (id%20==0); page-level WAL means artifact ratio differs"])
             f.flush()
 
             with c.cursor() as cur:  # mutate another ~5%
                 cur.execute("UPDATE bench_payload SET payload=md5(payload||'i1'), updated=2 WHERE id % 20 = 7")
             (_, d_incr), = [timed(lambda: pbr("--type=incr", "backup"))]
-            label, _bt, _info = last_backup_info()
-            w.writerow([t, "incremental", args.rows, round(d_incr, 1), label, repo_bytes(), dbbytes,
+            label, _bt, b_size, b_set_size, _info = last_backup_info()
+            w.writerow([t, "incremental", args.rows, round(d_incr, 1), label, b_size, repo_bytes(), dbbytes,
                         "mutated another ~5% (id%20==7)"])
             f.flush()
             print(f"trial {t} done: full={d_full:.1f}s diff={d_diff:.1f}s incr={d_incr:.1f}s", flush=True)

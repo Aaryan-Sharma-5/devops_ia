@@ -1,0 +1,27 @@
+{
+  "name": "automated-postgresql-backup-pitr-pgbackrest",
+  "version": "1.0.0",
+  "description": "Automated PostgreSQL Backup and Point-in-Time Recovery using pgBackRest",
+  "main": "scripts/build_presentation_pptxgenjs.js",
+  "scripts": {
+    "build:presentation": "node scripts/build_presentation_pptxgenjs.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnamayNarkar/devops_ia.git"
+  },
+  "keywords": [
+    "postgresql",
+    "pgbackrest",
+    "backup",
+    "point-in-time-recovery",
+    "pitr",
+    "wal-archiving",
+    "devops"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  }
+}
