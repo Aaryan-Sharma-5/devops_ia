@@ -1,4 +1,4 @@
-trial,backup_type,rows,duration_s,backup_label,repo_bytes_after,db_bytes,notes
-1,full,20000,10.6,20261012-210822F,12137779,3989504,dbsize=3896 kB
-1,differential,20000,2.5,20261012-210822F_20261012-210833D,14338561,3989504,mutated ~5% rows (id%20==0); page-level WAL means artifact ratio differs
-1,incremental,20000,3.0,20261012-210822F_20261012-210836I,16284776,3989504,mutated another ~5% (id%20==7)
+trial,backup_type,rows,duration_s,backup_label,backup_size_bytes,repository_total_bytes_after,db_bytes,notes
+1,full,20000,10.6,20261012-210822F,4718592,12137779,3989504,dbsize=3896 kB (individual backup ~4.5MB; cumulative repo ~12.1MB)
+1,differential,20000,2.5,20261012-210822F_20261012-210833D,714445,14338561,3989504,mutated ~5% rows (id%20==0); individual backup ~697.7KB (cumulative repo ~14.3MB)
+1,incremental,20000,3.0,20261012-210822F_20261012-210836I,651059,16284776,3989504,mutated another ~5% (id%20==7); individual backup ~635.8KB (cumulative repo ~16.3MB)

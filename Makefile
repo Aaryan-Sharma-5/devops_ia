@@ -2,8 +2,11 @@
 
 up:
 	docker compose up -d --build
-	docker compose exec -T db su postgres -c "pgbackrest --stanza=stagepass stanza-create" || true
-	python3 scripts/seed_helper.py || true
+	@echo "Verifying database readiness and initializing pgBackRest stanza..."
+	@sleep 5
+	docker compose exec -T db su postgres -c "pgbackrest --stanza=stagepass stanza-create" || echo "[WARN] Stanza create had warnings or stanza exists; proceeding to check..."
+	docker compose exec -T db su postgres -c "pgbackrest --stanza=stagepass check"
+	python3 scripts/seed_helper.py
 
 seed:
 	python3 scripts/seed_helper.py
@@ -36,6 +39,8 @@ pdf-report:
 	python3 scripts/build_report_pdf.py || python scripts/build_report_pdf.py
 
 
+# CAUTION: 'make clean' destroys volumes and recorded result files (CSVs, logs, plots).
+# Avoid running during final demo preparation to preserve submission evidence.
 clean:
 	docker compose down -v || true
 	rm -rf results/*.csv results/*.json results/logs/* results/plots/* || true

@@ -90,7 +90,7 @@ def main():
     else:
         print("no experiment_runs.csv yet — skipping recovery chart", flush=True)
 
-    # Chart 2: backup durations by type
+    # Chart 2: backup durations by type (single trial)
     if bench:
         agg = {}
         for b in bench:
@@ -103,13 +103,32 @@ def main():
             import matplotlib.pyplot as plt
             plt.figure(figsize=(7, 4))
             plt.bar(list(med.keys()), list(med.values()), color=["#5b1a2e", "#e8a13c", "#e0683c"][:len(med)])
-            plt.ylabel("seconds (median)")
-            plt.title("pgBackRest backup durations by type (from backup_benchmarks.csv)")
+            plt.ylabel("measured duration in seconds (single trial)")
+            plt.title("pgBackRest backup durations by type (measured single trial)")
             plt.tight_layout()
             plt.savefig(f"{PLOTDIR}/backup_durations.png")
+            plt.close()
             print(f"wrote {PLOTDIR}/backup_durations.png", flush=True)
+
+            # Chart 3: Storage comparison - Individual backup size vs Cumulative repository size
+            types = [b.get("backup_type") for b in bench]
+            backup_sizes_mb = [float(b.get("backup_size_bytes", 0)) / (1024 * 1024) for b in bench]
+            repo_totals_mb = [float(b.get("repository_total_bytes_after", 0)) / (1024 * 1024) for b in bench]
+            x = range(len(types))
+            w = 0.35
+            plt.figure(figsize=(7.5, 4.5))
+            plt.bar([i - w / 2 for i in x], backup_sizes_mb, w, label="Individual Backup Size (MB)", color="#e0683c")
+            plt.bar([i + w / 2 for i in x], repo_totals_mb, w, label="Cumulative Repository Total (MB)", color="#5b1a2e")
+            plt.xticks(list(x), [t.capitalize() for t in types])
+            plt.ylabel("Size (MB)")
+            plt.title("pgBackRest Storage: Backup Size vs Cumulative Repository Size")
+            plt.legend()
+            plt.tight_layout()
+            plt.savefig(f"{PLOTDIR}/backup_storage.png")
+            plt.close()
+            print(f"wrote {PLOTDIR}/backup_storage.png", flush=True)
         else:
-            svg_bars(f"{PLOTDIR}/backup_durations.svg", "backup durations (median s)",
+            svg_bars(f"{PLOTDIR}/backup_durations.svg", "backup durations (measured single trial s)",
                      [(k, round(v, 1)) for k, v in med.items()])
     else:
         print("no backup_benchmarks.csv yet — skipping duration chart", flush=True)

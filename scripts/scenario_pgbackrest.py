@@ -33,6 +33,30 @@ def pgbackrest_restore(*args):
               "pgbackrest --stanza=stagepass " + " ".join(args), capture=True)
 
 
+def parse_wal(fname: str):
+    """Parse PostgreSQL 24-character hex WAL filename into (timeline, log_id, segment).
+
+    WAL filenames are structured as:
+      - Chars 0-7: Timeline ID (hex)
+      - Chars 8-15: Log ID / logical xlog file (hex)
+      - Chars 16-23: Segment ID within log (hex)
+    Comparing integer tuples provides a timeline-aware and hexadecimal-safe
+    ordering check across segment boundaries.
+    """
+    if not fname:
+        return (0, 0, 0)
+    clean_name = fname.strip().split(".")[0].split("-")[0]
+    if len(clean_name) != 24:
+        return (0, 0, 0)
+    try:
+        tli = int(clean_name[:8], 16)
+        log = int(clean_name[8:16], 16)
+        seg = int(clean_name[16:24], 16)
+        return (tli, log, seg)
+    except ValueError:
+        return (0, 0, 0)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run-id", default="pgbackrest-run1")
@@ -116,30 +140,30 @@ def main():
     print(f"restore_point={rp_name} lsn={lsn} walfile={rp_walfile} time={target_time} switch={switch_wal}",
           flush=True)
     # WAIT until the segment containing the restore point is actually archived.
-    # Poll pg_stat_archiver (last_archived_wal >= rp segment) AND the archive dir.
+    # Check pg_stat_archiver using timeline-aware parsed WAL ordering AND verify
+    # the exact segment exists in the pgBackRest archive directory.
     # Fail safely on timeout or on NEW archiver failures — never assume.
     deadline = time.time() + 240
     archived_ok = False
-    # Timeline changes after a promote; derive the archive subdir from the WAL file.
-    tl_dir = rp_walfile[:8] + "00000000"
-    arch_dir = f"/var/lib/pgbackrest/archive/stagepass/17-1/{tl_dir}"
+    rp_wal_tuple = parse_wal(rp_walfile)
     while time.time() < deadline:
         with c.cursor() as cur:
             cur.execute("SELECT last_archived_wal, last_archived_time, failed_count FROM pg_stat_archiver")
             wal, wtime, failed = cur.fetchone()
-        r2 = subprocess.run(["docker", "compose", "exec", "-T", "backup-tools", "su", "postgres", "-c",
-                             f"ls {arch_dir}/ 2>/dev/null | grep -c '^' || true"],
-                            capture_output=True, text=True, timeout=30)
-        nseg = (r2.stdout or "").strip()
+        # Verify exact target segment exists in pgBackRest archive path (handles .gz / suffixes)
         r3 = subprocess.run(["docker", "compose", "exec", "-T", "backup-tools", "su", "postgres", "-c",
-                             f"ls {arch_dir}/ 2>/dev/null | grep {rp_walfile} || true"],
+                             f"find /var/lib/pgbackrest/archive/stagepass/17-1/ -name '*{rp_walfile}*' 2>/dev/null"],
                             capture_output=True, text=True, timeout=30)
         have_seg = bool((r3.stdout or "").strip())
-        print(f"archiver: last={wal} at={wtime} failed={failed}(was {failed0}) segs={nseg} have_{rp_walfile}={have_seg}",
+        wal_tuple = parse_wal(wal)
+        # Timeline-aware comparison: last archived WAL must be on the same timeline and >= target segment, or higher timeline
+        wal_at_or_beyond = (wal_tuple[0] == rp_wal_tuple[0] and wal_tuple >= rp_wal_tuple) or (wal_tuple[0] > rp_wal_tuple[0])
+        print(f"archiver: last={wal} (parsed={wal_tuple}) at={wtime} failed={failed}(was {failed0}) "
+              f"target_wal={rp_walfile} (parsed={rp_wal_tuple}) have_seg={have_seg} wal_at_or_beyond={wal_at_or_beyond}",
               flush=True)
         if int(failed or 0) > int(failed0 or 0):
             sys.exit(f"REFUSED: NEW archive failures during wait (was {failed0}, now {failed}) — see db logs")
-        if wal and wal >= rp_walfile and have_seg:
+        if wal and wal_at_or_beyond and have_seg:
             archived_ok = True
             break
         time.sleep(5)
@@ -173,14 +197,17 @@ def main():
     assert wait_db(300), "db did not come back after PITR"
     assert wait_app(300), "app not ready after PITR"
     restore_dur = time.time() - rec_t0
-    # confirm recovery reached the named target via logs
+    # confirm recovery reached the named target via logs from current recovery run
     logs = subprocess.run(["docker", "compose", "logs", "db"], capture_output=True, text=True, timeout=60).stdout
+    os.makedirs("results/logs", exist_ok=True)
     with open(f"results/logs/{args.run_id}-db-recovery.log", "w") as f:
         f.write(logs[-20000:])
-    hit = ("recovery stopping before" in logs or "recovery target" in logs.lower()
-           or "restore point" in logs.lower() or rp_name in logs)
-    print(f"recovery-target log evidence: {'found' if hit else 'NOT-FOUND (check log)'}", flush=True)
-    os.makedirs("results/logs", exist_ok=True)
+    # Require explicit log evidence of stopping at/before the target named restore point
+    target_stop_marker = f'recovery stopping at restore point "{rp_name}"'
+    target_stop_before_marker = f'recovery stopping before restore point "{rp_name}"'
+    hit = target_stop_marker in logs or target_stop_before_marker in logs
+    print(f"recovery-target log evidence: {'found' if hit else 'NOT-FOUND (check log)'} for target '{rp_name}'", flush=True)
+    assert hit, f"Target verification failed: log marker '{target_stop_marker}' not found in database logs"
 
     print("=== B7: verify ===", flush=True)
     c = db()
@@ -191,7 +218,7 @@ def main():
         cur.execute("SELECT COUNT(*) FROM bookings b LEFT JOIN events e ON e.id=b.event_id WHERE e.id IS NULL")
         orphans = cur.fetchone()[0]
     print(f"recovered total={rec_total} garba={rec_garba} new={recovered_new} orphans={orphans}", flush=True)
-    success = (rec_total, rec_garba, recovered_new, orphans) == (120, 40, 20, 0)
+    success = (rec_total, rec_garba, recovered_new, orphans) == (120, 40, 20, 0) and hit
 
     # repo size
     r3 = subprocess.run(["docker", "compose", "exec", "-T", "backup-tools", "su", "postgres", "-c",
@@ -210,8 +237,7 @@ def main():
              "notes": f"lsn={lsn} backup={backup_id} log_evidence={hit} new_ids_sample={','.join(new_ids[:5])}..."})
     print(f"Scenario B {'PASS' if success else 'DONE-with-mismatch — debug required'} in {time.time()-t_start:.0f}s",
           flush=True)
-    if not success:
-        sys.exit(2)
+    assert success, f"Scenario B verification failed (counts={(rec_total, rec_garba, recovered_new, orphans)}, hit={hit})"
 
 
 if __name__ == "__main__":

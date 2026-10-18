@@ -140,10 +140,17 @@ def build_presentation():
 
                 p2 = sh.text_frame.add_paragraph()
                 p2.text = "Demonstrated via StagePass (KJSCE Garba Eve) • PostgreSQL 17.11 & pgBackRest 2.59.3"
-                p2.font.size = Pt(10.5)
+                p2.font.size = Pt(10)
                 p2.font.color.rgb = TEXT_MUTED
+                p2.space_after = Pt(4)
 
-    set_slide_note(s1, "Welcome the evaluator; state the project topic: Automated PostgreSQL Backup and Point-in-Time Recovery using pgBackRest without cloud infrastructure.")
+                p3 = sh.text_frame.add_paragraph()
+                p3.text = "Team: Aaryan Sharma (16010123012) • Anamay Narkar (16010123040) • Aditya Singh (16010123025) • Vraj Soni (160101220)"
+                p3.font.size = Pt(9)
+                p3.font.bold = True
+                p3.font.color.rgb = MAROON
+
+    set_slide_note(s1, "Welcome the evaluator; introduce team members: Aaryan Sharma (16010123012), Anamay Narkar (16010123040), Aditya Singh (16010123025), Vraj Soni (160101220). State the project topic: Automated PostgreSQL Backup and Point-in-Time Recovery using pgBackRest without cloud infrastructure.")
 
     # ==============================================================
     # SLIDE 2: THE PROBLEM (ONE BAD DELETE)
@@ -184,9 +191,9 @@ def build_presentation():
 
     add_card(s2, 7.55, 3.90, 4.85, 1.85, bg_color=EMERALD_BG, border_color=EMERALD_BORDER)
     add_formatted_text(s2, 7.55, 3.90, 4.85, 1.85, [
-        {"text": "RECOVERY TARGET (RPO = 0)", "size": 10, "bold": True, "color": EMERALD, "space_after": 2},
-        {"text": "120 / 120", "size": 34, "bold": True, "color": EMERALD, "space_after": 2},
-        {"text": "100% Transactions Preserved • 0 Orphans", "size": 10.5, "bold": True, "color": SLATE_DARK}
+        {"text": "CONTROLLED RECOVERY TARGET", "size": 10, "bold": True, "color": EMERALD, "space_after": 2},
+        {"text": "20 / 20", "size": 34, "bold": True, "color": EMERALD, "space_after": 2},
+        {"text": "Target: Recover All 20 Post-Backup Registrations in this Test", "size": 9.5, "bold": True, "color": SLATE_DARK}
     ])
 
     set_slide_note(s2, "Tell the incident story: peak registrations, accidental DELETE, dashboard drops to 80/0. State the recovery criteria.")
@@ -291,12 +298,12 @@ def build_presentation():
             {"text": "PostgreSQL archive_command pushes every 16 MB WAL segment and archive_timeout threshold outside PGDATA automatically.\n\n", "size": 10, "color": TEXT_BODY}
         ],
         [
-            {"text": "• Microsecond Replay Precision:\n", "bold": True, "size": 10.5, "color": EMERALD},
+            {"text": "• WAL Replay Precision:\n", "bold": True, "size": 10.5, "color": EMERALD},
             {"text": "Restores base physical backup, then replays WAL records up to a specific transaction, LSN, or named restore point.\n\n", "size": 10, "color": TEXT_BODY}
         ],
         [
-            {"text": "• True Disaster Recovery:\n", "bold": True, "size": 10.5, "color": SLATE_DARK},
-            {"text": "Shifts recovery from 'restore to backup time' to 'restore to the microsecond before disaster'.", "size": 10, "color": TEXT_BODY}
+            {"text": "• Granular Disaster Recovery:\n", "bold": True, "size": 10.5, "color": SLATE_DARK},
+            {"text": "Shifts recovery from 'restore to backup time' to 'recovery to a named restore point recorded in WAL'.", "size": 10, "color": TEXT_BODY}
         ]
     ])
 
@@ -311,8 +318,8 @@ def build_presentation():
     # 4 Architecture Nodes
     nodes = [
         {"title": "StagePass App", "sub": "FastAPI (:8000)", "desc": "Request-scoped pool\nSurvives DB downtime", "color": MAROON},
-        {"title": "PostgreSQL 17.11", "sub": "Database Engine (:5433)", "desc": "wal_level=replica\narchive_mode=on", "color": SLATE_DARK},
-        {"title": "Dedicated Repo", "sub": "Volume (/var/lib/pbr)", "desc": "Isolated from PGDATA\nFull/Diff/Incr + WAL", "color": MAROON},
+        {"title": "PostgreSQL 17.11", "sub": "Host :5433 | Container :5432", "desc": "wal_level=replica\narchive_mode=on", "color": SLATE_DARK},
+        {"title": "Dedicated Repo", "sub": "Volume (/var/lib/pgbackrest)", "desc": "Isolated from PGDATA\nFull/Diff/Incr + WAL", "color": MAROON},
         {"title": "Backup-Tools", "sub": "Operational Sidecar", "desc": "Guarded restore CLI\nLSN verification gates", "color": EMERALD}
     ]
     for i, n in enumerate(nodes):
@@ -342,7 +349,7 @@ def build_presentation():
         ]
     ])
 
-    set_slide_note(s6, "Trace the data flow: app writes to DB, WAL is pushed to repository volume, backup-tools controls PITR restore and signals promotion.")
+    set_slide_note(s6, "Trace the data flow: app writes to DB, WAL is pushed to repository volume /var/lib/pgbackrest, backup-tools controls PITR restore.")
 
     # ==============================================================
     # SLIDE 7: BACKUP MODES + NAMED PITR
@@ -351,9 +358,9 @@ def build_presentation():
     s7.shapes.title.text = "Backup Automation & Self-Documenting Named PITR"
 
     modes = [
-        {"name": "FULL BACKUP", "dur": "10.6 s", "size": "4.5 MB", "ratio": "Base", "desc": "Complete physical cluster copy + active WAL. Self-contained; highest time & storage cost.", "color": MAROON},
-        {"name": "DIFFERENTIAL", "dur": "2.5 s", "size": "697.7 KB", "ratio": "84.5% Saving", "desc": "Copies changed pages since last FULL backup. Breaks dependency on prior incrementals.", "color": SAFFRON},
-        {"name": "INCREMENTAL", "dur": "3.0 s", "size": "635.8 KB", "ratio": "85.9% Saving", "desc": "Copies blocks modified since ANY last backup. Fastest routine cycle; chained dependency.", "color": EMERALD}
+        {"name": "FULL BACKUP", "dur": "10.6 s", "size": "4.5 MB", "ratio": "Base", "desc": "Individual backup: 4.5 MB (cumulative repo: 12.1 MB). Complete physical copy + active WAL.", "color": MAROON},
+        {"name": "DIFFERENTIAL", "dur": "2.5 s", "size": "697.7 KB", "ratio": "84.5% Saving", "desc": "Individual backup: 697.7 KB (cumulative repo: 14.3 MB). Copies pages modified since last Full.", "color": SAFFRON},
+        {"name": "INCREMENTAL", "dur": "3.0 s", "size": "635.8 KB", "ratio": "85.9% Saving", "desc": "Individual backup: 635.8 KB (cumulative repo: 16.3 MB). Copies changes since preceding backup.", "color": EMERALD}
     ]
     for i, m in enumerate(modes):
         x = 0.92 + i * 3.90
@@ -371,19 +378,19 @@ def build_presentation():
         {"text": "AUTOMATED POINT-IN-TIME RECOVERY TO TARGET POINT", "size": 10.5, "bold": True, "color": MAROON, "space_after": 2},
         [
             {"text": "• Elimination of Clock Skew: ", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "Avoids ambiguous timestamps; plants a named restore point via SELECT pg_create_restore_point('rp_scenario_b');\n", "size": 10, "color": TEXT_BODY}
+            {"text": "Plants a named restore point: SELECT pg_create_restore_point('stagepass_before_incident_pgbackrest_run2');\n", "size": 10, "color": TEXT_BODY}
         ],
         [
             {"text": "• Guaranteed Archival Gate: ", "bold": True, "size": 10, "color": EMERALD},
-            {"text": "Recovery script checks WAL segment archives and refuses to restore until target LSN is proven written to repo disk.\n", "size": 10, "color": TEXT_BODY}
+            {"text": "Timeline-aware check verifies WAL segment reached repository disk before proceeding with restore.\n", "size": 10, "color": TEXT_BODY}
         ],
         [
             {"text": "• Precise Target Recovery: ", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "pgbackrest restore --type=name --target=rp_scenario_b --target-action=promote replays WAL and reopens DB read-write.", "size": 10, "color": TEXT_BODY}
+            {"text": "pgbackrest restore --type=name --target=stagepass_before_incident_pgbackrest_run2 --target-action=promote replays WAL to point.", "size": 10, "color": TEXT_BODY}
         ]
     ])
 
-    set_slide_note(s7, "Stress that sizes are compressed repository bytes, not raw DB megabytes. Highlight the named restore point and the archival safety gate.")
+    set_slide_note(s7, "Distinguish individual backup size (4.5MB/698KB/636KB) from cumulative repo size (12.1MB/14.3MB/16.3MB). Highlight named restore point and archival safety gate.")
 
     # ==============================================================
     # SLIDE 8: STAGEPASS CONTROLS & METHODOLOGY
@@ -471,21 +478,21 @@ def build_presentation():
         ],
         [
             {"text": "• Recovery Time (RTO): ", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "10.6 s – 15.0 s\n", "size": 10, "color": TEXT_BODY}
+            {"text": "Run 1 = 15.0 s  |  Run 2 = 10.6 s\n", "size": 10, "color": TEXT_BODY}
         ],
         [
-            {"text": "• Operational Verdict: ", "bold": True, "size": 10, "color": RED},
-            {"text": "Fast recovery, but unacceptable RPO breach for active workloads.", "size": 10, "color": TEXT_BODY}
+            {"text": "• Architectural Scope: ", "bold": True, "size": 10, "color": RED},
+            {"text": "Fast recovery, but snapshot lacks WAL replay mechanism by design.", "size": 10, "color": TEXT_BODY}
         ]
     ])
 
-    set_slide_note(s9, "Snapshot, 20 registrations, DELETE, restore: back to 100, Garba 20, zero of the new twenty survive. Correct behavior for snapshot alone, but lossy.")
+    set_slide_note(s9, "Snapshot, 20 registrations, DELETE, restore: back to 100, Garba 20, zero of the new twenty survive. Baseline snapshot contains no post-snapshot WAL replay.")
 
     # ==============================================================
     # SLIDE 10: SCENARIO B RESULT (PGBACKREST PITR)
     # ==============================================================
     s10 = prs.slides.add_slide(layout_title_only)
-    s10.shapes.title.text = "Scenario B: pgBackRest with Archived WAL (100% Recovery)"
+    s10.shapes.title.text = "Scenario B: pgBackRest with Archived WAL (Target Reached)"
 
     # Left Column: Result Breakdown
     add_card(s10, 0.92, 1.85, 6.10, 3.90, bg_color=EMERALD_BG, border_color=EMERALD_BORDER)
@@ -497,11 +504,11 @@ def build_presentation():
         ],
         [
             {"text": "2. Live Traffic & Named Restore Point: ", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "20 attendees register (120 total / 40 Garba). Restore point rp_scenario_b planted with logged LSN.\n", "size": 10, "color": TEXT_BODY}
+            {"text": "20 attendees register (120 total / 40 Garba). Restore point stagepass_before_incident_pgbackrest_run2 planted.\n", "size": 10, "color": TEXT_BODY}
         ],
         [
             {"text": "3. Verified Archival Guard: ", "bold": True, "size": 10, "color": EMERALD},
-            {"text": "Harness verifies WAL segment reached repository before proceeding.\n", "size": 10, "color": TEXT_BODY}
+            {"text": "Timeline-aware check verifies WAL segment reached repository disk.\n", "size": 10, "color": TEXT_BODY}
         ],
         [
             {"text": "4. Disaster & Target PITR Restore: ", "bold": True, "size": 10, "color": SLATE_DARK},
@@ -509,16 +516,16 @@ def build_presentation():
         ],
         [
             {"text": "• Final Evaluated State: ", "bold": True, "size": 10.5, "color": EMERALD},
-            {"text": "120 Total / 40 Garba. Exactly 20/20 new registrations recovered!", "size": 10.5, "color": TEXT_BODY}
+            {"text": "120 Total / 40 Garba. All 20/20 tested post-backup registrations recovered!", "size": 10.5, "color": TEXT_BODY}
         ]
     ])
 
     # Right Column: Metric Callout Cards
     add_card(s10, 7.25, 1.85, 5.15, 1.85, bg_color=CARD_BG, border_color=EMERALD_BORDER)
     add_formatted_text(s10, 7.25, 1.85, 5.15, 1.85, [
-        {"text": "TRANSACTIONS PRESERVED (RPO)", "size": 10, "bold": True, "color": EMERALD, "space_after": 2},
+        {"text": "TRANSACTIONS PRESERVED (TEST)", "size": 10, "bold": True, "color": EMERALD, "space_after": 2},
         {"text": "20 / 20 (100%)", "size": 36, "bold": True, "color": EMERALD, "space_after": 2},
-        {"text": "Zero Data Loss • All Transaction IDs Intact", "size": 10.5, "bold": True, "color": SLATE_DARK}
+        {"text": "Zero Loss of Tested Registrations at Target", "size": 10.5, "bold": True, "color": SLATE_DARK}
     ])
 
     add_card(s10, 7.25, 3.90, 5.15, 1.85, bg_color=LIGHT_GRAY_BG)
@@ -526,15 +533,15 @@ def build_presentation():
         {"text": "PERFORMANCE & AUDIT VALIDATION", "size": 10, "bold": True, "color": MAROON, "space_after": 4},
         [
             {"text": "• Recovery Time (RTO): ", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "17.6 s – 20.6 s (only ~5s more than snapshot)\n", "size": 10, "color": TEXT_BODY}
+            {"text": "Run 1 = 17.6 s (+2.6 s delta) | Run 2 = 20.6 s (+10.0 s delta)\n", "size": 10, "color": TEXT_BODY}
         ],
         [
             {"text": "• Engine Log Proof: ", "bold": True, "size": 10, "color": MAROON},
-            {"text": "'recovery stopping at restore point \"rp_scenario_b\"'\n", "size": 9.5, "bold": True, "color": MAROON_DARK}
+            {"text": "'recovery stopping at restore point \"stagepass_before_incident_pgbackrest_run2\"'\n", "size": 8.2, "bold": True, "color": MAROON_DARK}
         ],
         [
-            {"text": "• Reproducibility: ", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "100% verified across both independent experimental runs.", "size": 10, "color": TEXT_BODY}
+            {"text": "• Production Caveat: ", "bold": True, "size": 10, "color": SLATE_DARK},
+            {"text": "Experiment achieved zero loss; production RPO depends on WAL lag.", "size": 9.5, "color": TEXT_BODY}
         ]
     ])
 
@@ -556,18 +563,18 @@ def build_presentation():
     # Bottom Summary Table / Card
     add_card(s11, 0.92, 4.45, 11.50, 1.30, bg_color=LIGHT_GRAY_BG)
     add_formatted_text(s11, 0.92, 4.45, 11.50, 1.30, [
-        {"text": "EMPIRICAL RECOVERY TIME & STORAGE METRICS", "size": 10, "bold": True, "color": MAROON, "space_after": 2},
+        {"text": "EMPIRICAL RECOVERY TIME & STORAGE METRICS (MEASURED DATA)", "size": 10, "bold": True, "color": MAROON, "space_after": 2},
         [
             {"text": "• Recovery Time Objective (RTO): ", "bold": True, "size": 9.5, "color": SLATE_DARK},
-            {"text": "Snapshot restores in 10.6–15.0 s vs pgBackRest in 17.6–20.6 s. The ~5 s extra replay time completely prevents data loss.\n", "size": 9.5, "color": TEXT_BODY}
+            {"text": "Snapshot restores in 10.6 s & 15.0 s vs pgBackRest in 17.6 s & 20.6 s (observed differences: +2.6 s in Run 1 and +10.0 s in Run 2 for full WAL replay).\n", "size": 9.5, "color": TEXT_BODY}
         ],
         [
-            {"text": "• Local Storage Optimization: ", "bold": True, "size": 9.5, "color": SLATE_DARK},
-            {"text": "Differential (2.5s / 698KB) and Incremental (3.0s / 636KB) cut routine backup duration by 75% and storage by >84% vs Full (10.6s / 4.5MB).", "size": 9.5, "color": TEXT_BODY}
+            {"text": "• Storage & Backup Modes (Single Trial): ", "bold": True, "size": 9.5, "color": SLATE_DARK},
+            {"text": "Individual backup size: Full = 4.5 MB, Diff = 697.7 KB, Incr = 635.8 KB (vs cumulative repo size: 12.1 MB, 14.3 MB, 16.3 MB). Diff/Incr save >84% backup footprint.", "size": 9.5, "color": TEXT_BODY}
         ]
     ])
 
-    set_slide_note(s11, "RTO differs by seconds (11-15s vs 18-21s). Recoverability differs by 20 transactions. Point at the charts: real benchmark numbers from CSV.")
+    set_slide_note(s11, "RTO differs by seconds: observed run deltas of 2.6s and 10.0s. Storage chart distinguishes individual backup size from cumulative repository size.")
 
     # ==============================================================
     # SLIDE 12: CONCLUSION, VALIDITY & REFERENCES
@@ -580,16 +587,16 @@ def build_presentation():
     add_formatted_text(s12, 0.92, 1.85, 5.60, 3.90, [
         {"text": "CORE PROJECT FINDINGS", "size": 11, "bold": True, "color": MAROON, "space_after": 6},
         [
-            {"text": "1. Automated Disaster Recovery:\n", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "pgBackRest automates database backups, continuous WAL archiving, and targeted PITR without requiring external cloud infrastructure.\n\n", "size": 9.5, "color": TEXT_BODY}
+            {"text": "1. Controlled Experiment Success:\n", "bold": True, "size": 10, "color": SLATE_DARK},
+            {"text": "In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point.\n\n", "size": 9.5, "color": TEXT_BODY}
         ],
         [
-            {"text": "2. High Reliability & Speed:\n", "bold": True, "size": 10, "color": SLATE_DARK},
-            {"text": "Preserved 100% of transactions with an RTO of ~17–20s; differential and incremental modes cut backup overhead by >84%.\n\n", "size": 9.5, "color": TEXT_BODY}
+            {"text": "2. Production RPO Qualification:\n", "bold": True, "size": 10, "color": SLATE_DARK},
+            {"text": "This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention.\n\n", "size": 9.5, "color": TEXT_BODY}
         ],
         [
-            {"text": "3. Local Lab Evaluation:\n", "bold": True, "size": 10, "color": RED},
-            {"text": "Demonstrated full operational recovery on single-host Docker; cloud offloading remains an optional enhancement rather than a dependency.", "size": 9.5, "color": TEXT_BODY}
+            {"text": "3. RTO & Storage Trade-offs:\n", "bold": True, "size": 10, "color": MAROON},
+            {"text": "Observed PITR recovery times of 17.6s & 20.6s (+2.6s & +10.0s over snapshot). Single-trial backup modes cut routine footprint by >84%.", "size": 9.5, "color": TEXT_BODY}
         ]
     ])
 

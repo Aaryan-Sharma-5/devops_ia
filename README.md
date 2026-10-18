@@ -6,6 +6,12 @@
 > WAL archiving, and disaster recovery. It explores restoring a database to a specific point in time
 > after accidental data loss, evaluating recovery time and reliability without requiring cloud infrastructure.
 
+### Project Authors (K. J. Somaiya College of Engineering)
+- **Aaryan Sharma** — `16010123012`
+- **Anamay Narkar** — `16010123040`
+- **Aditya Singh** — `16010123025`
+- **Vraj Soni** — `160101220`
+
 **Measured headline:** snapshot-only rsync → 100/120 bookings (**20 new registrations lost**, ×2 runs);
 pgBackRest named PITR → 120/120 with **20/20 new registrations recovered** (×2 runs).
 

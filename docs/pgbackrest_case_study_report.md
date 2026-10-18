@@ -1,9 +1,18 @@
 # Automated PostgreSQL Backup and Point-in-Time Recovery using pgBackRest
 **Automating Database Backups, WAL Archiving, and Disaster Recovery without Cloud Infrastructure**
-*DevOps Theory — Internal Assessment Case Study | Date: 2026-10-17*
+*DevOps Theory — Internal Assessment Case Study | Date: 2026-10-18*
 
 > **Project Focus:** This project demonstrates how pgBackRest automates PostgreSQL database backups, WAL archiving, and disaster recovery. It explores restoring a database to a specific point in time after accidental data loss, evaluating recovery time and reliability without requiring cloud infrastructure.
 > **Research Question:** How does pgBackRest automate PostgreSQL database backups, WAL archiving, and disaster recovery to a specific point in time after accidental data loss, and what are its recovery time and reliability trade-offs without requiring cloud infrastructure?
+
+### Project Team Details
+| Role | Name & Roll Number |
+|---|---|
+| Group Member 1 | Aaryan Sharma (16010123012) |
+| Group Member 2 | Anamay Narkar (16010123040) |
+| Group Member 3 | Aditya Singh (16010123025) |
+| Group Member 4 | Vraj Soni (160101220) |
+| Faculty / Evaluator | Department of Information Technology / DevOps Course Faculty |
 
 ## 2. Abstract / Executive Summary
 
@@ -11,9 +20,9 @@ This project demonstrates how pgBackRest automates PostgreSQL database backups, 
 
 In enterprise database systems, operator error—specifically unconstrained DELETE or UPDATE statements—represents one of the most severe classes of production downtime. This case study investigates disaster recovery mechanisms for PostgreSQL 17.11 through an empirical, end-to-end event registration platform called StagePass. We contrast a traditional stopped-cluster filesystem snapshot (rsync) against pgBackRest 2.59.3 with continuous Write-Ahead Log (WAL) archiving and Point-in-Time Recovery (PITR).
 
-Under identical workloads of 100 seeded rows and 20 real HTTP bookings, an accidental DELETE removes all 40 flagship bookings. The snapshot-only baseline recovers the cluster to snapshot time (100 bookings), but completely loses all 20 post-snapshot transactions (0% recovery of unbacked traffic). In contrast, pgBackRest replays write-ahead logs up to a pre-incident named restore point (rp_scenario_b), achieving 100% data recovery (120/120 bookings, 20/20 new registrations preserved) with an RTO of 17.6–20.6 s. Furthermore, differential and incremental backup strategies demonstrated an 85% reduction in repository storage footprint and an 75% reduction in execution time compared to full backups.
+Under identical workloads of 100 seeded rows and 20 real HTTP bookings, an accidental DELETE removes all 40 flagship bookings. The snapshot-only baseline recovers the cluster to snapshot time (100 bookings), but completely loses all 20 post-snapshot transactions because those transactions occurred after the snapshot and the baseline deliberately has no WAL replay mechanism. In contrast, in both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point (stagepass_before_incident_pgbackrest_run2). This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention. Observed recovery times were 17.6 s in Run 1 and 20.6 s in Run 2 (differences of 2.6 s and 10.0 s compared to snapshot-only). Furthermore, differential and incremental backup strategies demonstrated an 85% reduction in individual backup storage footprint and over 70% reduction in execution time compared to full backups.
 
-> **[KEY EXPERIMENTAL FINDING]:** pgBackRest with archived WAL moves disaster recovery from 'state at the last backup moment' to 'state at the exact pre-incident target'. While snapshot recovery leaves an unrecoverable RPO gap of 20 transactions, pgBackRest achieves RPO = 0 for post-backup transactions at a marginal RTO cost of ~5 seconds.
+> **[KEY EXPERIMENTAL FINDING]:** In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point. This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention.
 
 ## 3. Introduction
 
@@ -174,7 +183,7 @@ Operational CLI commands utilized:
 
 • Backup Creation: pgbackrest --stanza=stagepass --type=full backup
 
-• Targeted Restore: pgbackrest --stanza=stagepass --type=name --target=rp_scenario_b --target-action=promote restore
+• Targeted Restore: pgbackrest --stanza=stagepass --type=name --target=stagepass_before_incident_pgbackrest_run2 --target-action=promote restore
 
 ## 18. Controlled Experimental Methodology
 
@@ -190,23 +199,25 @@ To maintain rigorous scientific control, both scenarios execute under identical 
 
 ## 19. rsync Snapshot-Only Baseline
 
-Consistent stopped-cluster filesystem snapshot created via rsync -aHAX --delete. When the DELETE incident removes Garba bookings, restoring the snapshot reverts the database to snapshot time (100 bookings). By design, the snapshot contains no write-ahead logs, resulting in total loss of all 20 post-snapshot registrations (reproduced across Run 1 and Run 2).
+Consistent stopped-cluster filesystem snapshot created via rsync -aHAX --delete. When the DELETE incident removes Garba bookings, restoring the snapshot reverts the database to snapshot time (100 bookings). The snapshot-only method loses the 20 post-snapshot registrations because those transactions occurred after the snapshot and the baseline deliberately has no WAL replay mechanism. This reflects the limitation of snapshot-only architectures rather than an inherent limitation of rsync itself (reproduced across Run 1 and Run 2).
 
 ## 20. pgBackRest PITR Experiment
 
-pgBackRest hot physical backup taken at 100 bookings. 20 registrations arrive, followed by planting named restore point rp_scenario_b. After verified WAL archival, the DELETE query runs. pgBackRest restores the base backup and rolls forward WAL segments to rp_scenario_b. The cluster promotes with all 120 bookings and 20/20 new registrations intact (reproduced across Run 1 and Run 2).
+pgBackRest hot physical backup taken at 100 bookings. 20 registrations arrive, followed by planting named restore point stagepass_before_incident_pgbackrest_run2. After verified timeline-aware WAL archival, the DELETE query runs. pgBackRest restores the base backup and rolls forward WAL segments to the named restore point. The cluster promotes with all 120 bookings and 20/20 new registrations intact (reproduced across Run 1 and Run 2). In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point. This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention.
 
 ## 21. Backup-Mode and Dump Benchmarks
 
-Empirical benchmark on 20,000 synthetic rows:
+Empirical benchmark on 20,000 synthetic rows (single trial measurements):
 
-• Full Backup: 10.6 s runtime, 4.5 MB compressed repository storage.
+• Full Backup: 10.6 s duration, 4.5 MB individual backup size (4,718,592 bytes), 12.1 MB cumulative repository total (12,137,779 bytes).
 
-• Differential Backup: 2.5 s runtime (76% faster), 697.7 KB compressed storage (84.5% smaller).
+• Differential Backup: 2.5 s duration (76% faster), 697.7 KB individual backup size (714,445 bytes; 84.5% delta saving), 14.3 MB cumulative repository total (14,338,561 bytes).
 
-• Incremental Backup: 3.0 s runtime (71% faster), 635.8 KB compressed storage (85.9% smaller).
+• Incremental Backup: 3.0 s duration (71% faster), 635.8 KB individual backup size (651,059 bytes; 85.9% delta saving), 16.3 MB cumulative repository total (16,284,776 bytes).
 
-• Logical pg_dump: 0.3 s runtime, 0.5 MB storage, but zero WAL replay capability.
+• Logical pg_dump: 0.3 s runtime, 0.5 MB dump size, but zero WAL replay capability.
+
+Storage Metric Distinction: Individual backup size measures the new data delta captured in that specific backup set, whereas cumulative repository size reflects the total disk space occupied by the entire pgBackRest repository including all previous backups and archived WAL files.
 
 ## 22. Results Tables and Charts (Real Data)
 
@@ -219,31 +230,40 @@ Empirical data collected from automated test executions (results/experiment_runs
 | rsync-run2 | 100 | 120 | 100 | 0 | 0.5 | 10.6 |
 | pgbackrest-run2 | 100 | 120 | 120 | 20 | 7.2 | 20.6 |
 
+| Trial | Backup Mode | Rows | Duration (s) | Backup Size | Cumulative Repo | Notes |
+|---|---|---|---|---|---|---|
+| 1 | FULL | 20000 | 10.6 | 4.50 MB | 11.58 MB | dbsize=3896 kB (individual backup ~4.5MB; cumulative repo ~12.1MB) |
+| 1 | DIFFERENTIAL | 20000 | 2.5 | 697.7 KB | 13.67 MB | mutated ~5% rows (id%20==0); individual backup ~697.7KB (cumulative repo ~14.3MB) |
+| 1 | INCREMENTAL | 20000 | 3.0 | 635.8 KB | 15.53 MB | mutated another ~5% (id%20==7); individual backup ~635.8KB (cumulative repo ~16.3MB) |
+
 ![Figure 3 — Booking counts per experimental run.](results/plots/recovery_counts.png)
 *Figure 3 — Booking counts per experimental run.*
 
-![Figure 4 — Backup duration comparisons.](results/plots/backup_durations.png)
-*Figure 4 — Backup duration comparisons.*
+![Figure 4 — Backup duration comparisons (single trial).](results/plots/backup_durations.png)
+*Figure 4 — Backup duration comparisons (single trial).*
+
+![Figure 5 — Storage comparison: Individual backup size vs Cumulative repository total.](results/plots/backup_storage.png)
+*Figure 5 — Storage comparison: Individual backup size vs Cumulative repository total.*
 
 ## 23. Comparison Matrix
 
 Comprehensive comparison across evaluated disaster recovery strategies:
 
-• Stopped Rsync Snapshot: RTO 10.6–15.0 s, RPO = Snapshot Moment (20 registrations lost), Storage = Full uncompressed PGDATA.
+• Stopped Rsync Snapshot: RTO Run 1 = 15.0 s / Run 2 = 10.6 s; RPO = Snapshot Moment (20 registrations lost; lacks WAL replay by design); Storage = Full uncompressed PGDATA.
 
-• pgBackRest PITR: RTO 17.6–20.6 s, RPO = Target Moment (0 transactions lost), Storage = Compressed Base + Sequential WAL.
+• pgBackRest PITR: RTO Run 1 = 17.6 s / Run 2 = 20.6 s (observed deltas of 2.6 s and 10.0 s vs snapshot); RPO = Selected Named Target (all 20 tested registrations recovered; production RPO depends on WAL archival and retention); Storage = Compressed Base + Sequential WAL.
 
-• Logical pg_dump: RTO 1.4 s, RPO = Dump Moment (no post-dump transactions), Storage = Compressed SQL/archive.
+• Logical pg_dump: RTO 1.4 s; RPO = Dump Moment (no post-dump transactions); Storage = Compressed SQL/archive.
 
 ## 24. Discussion and Evaluation
 
-The empirical findings demonstrate that the recoverability advantage of pgBackRest far outweighs the marginal recovery time delta. While rsync restored the cluster ~5 seconds faster, it incurred catastrophic data loss (20 unrecoverable transactions). In modern financial and booking systems, five seconds of extended recovery is vastly preferable to losing transactional integrity.
+The empirical findings demonstrate that the recoverability advantage of pgBackRest far outweighs the marginal recovery time delta. PITR took longer in both recorded runs, with observed differences of 2.6 seconds (Run 1: 17.6 s vs 15.0 s) and 10.0 seconds (Run 2: 20.6 s vs 10.6 s). Two runs illustrate the trade-off between snapshot-only restoration and full WAL replay to a verified target, rather than characterizing general performance variability. While rsync restored the cluster faster, it incurred complete data loss for post-snapshot traffic (20 unrecoverable transactions). In modern booking and transactional systems, an extra duration of 2.6 to 10.0 seconds to replay WAL to an exact verified target point is vastly preferable to losing transactional integrity.
 
 ## 25. RTO and RPO Interpretation
 
-• Recovery Time Objective (RTO): Measured as the end-to-end time required for PostgreSQL to complete WAL replay and accept HTTP requests.
+• Recovery Time Objective (RTO): Measured as the end-to-end time required for PostgreSQL to complete WAL replay, promote, and accept HTTP traffic. Across recorded runs, PITR RTO was 17.6 s (Run 1) and 20.6 s (Run 2), compared to 15.0 s and 10.6 s for snapshot recovery.
 
-• Recovery Point Objective (RPO): Determined by the lag between transaction commit and repository WAL archival. With archive_timeout=60, RPO upper bound is 60 seconds; in our lab with restore point flushing, zero data loss was achieved.
+• Recovery Point Objective (RPO): In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point. This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention. Under continuous archiving, the exposure window is bounded by archive_timeout (60 seconds) and shipping latency.
 
 ## 26. Threats to Validity and Limitations
 
@@ -255,6 +275,8 @@ Academic rigor requires stating threats to validity:
 
 • External Validity: Benchmark dataset (20,000 rows) represents medium-scale tables; multi-terabyte production instances require multi-core compression tuning.
 
+• Single Trial Limitation: Backup mode benchmarks represent a single measured trial rather than a multi-trial statistical median.
+
 ## 27. Security Considerations
 
 • Credential Hygiene: Database passwords injected via environment variables; zero hardcoded secrets in version control.
@@ -263,9 +285,11 @@ Academic rigor requires stating threats to validity:
 
 • Data Privacy: Synthetic attendee emails use RFC 2606 reserved domains (@example.test).
 
+• Lab Scope Warning: Lab credentials (postgres/stagepass) are strictly disposable and unsuitable for production deployments.
+
 ## 28. Conclusion (Answering the Research Question)
 
-pgBackRest with continuous WAL archiving definitively improves PostgreSQL recoverability compared to consistent filesystem snapshots alone. It transforms disaster recovery from coarse-grained snapshot restoration into precise, transaction-level Point-in-Time Recovery, preserving 100% of post-backup transactions at a negligible RTO penalty (~5 seconds). Furthermore, differential and incremental modes reduce routine backup runtime and storage by >84%, proving their viability for high-frequency continuous backup regimes.
+pgBackRest with continuous WAL archiving definitively improves PostgreSQL recoverability compared to consistent filesystem snapshots alone. In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point. This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention. PITR incurred observed recovery time differences of 2.6 s in Run 1 and 10.0 s in Run 2 compared to snapshot alone, while preserving complete transactional integrity. Furthermore, differential and incremental modes reduce routine backup storage by >84%, proving their viability for high-frequency continuous backup regimes.
 
 ## 29. Future Improvements
 

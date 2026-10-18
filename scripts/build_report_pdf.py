@@ -220,12 +220,16 @@ def build_pdf():
             Paragraph(f"<b>Date:</b> {datetime.date.today().isoformat()}", styles['ReportBody'])
         ],
         [
+            Paragraph("<b>Team Members:</b><br/>• Aaryan Sharma (16010123012)<br/>• Anamay Narkar (16010123040)<br/>• Aditya Singh (16010123025)<br/>• Vraj Soni (160101220)", styles['ReportBody']),
+            Paragraph("<b>Faculty / Evaluator:</b><br/>Department of Information Technology / DevOps Evaluator<br/><br/><b>Stack:</b> PostgreSQL 17.11 • pgBackRest 2.59.3", styles['ReportBody'])
+        ],
+        [
             Paragraph("<b>Application:</b> StagePass Event Operations", styles['ReportBody']),
-            Paragraph("<b>Stack:</b> PostgreSQL 17.11 • pgBackRest 2.59.3", styles['ReportBody'])
+            Paragraph("<b>Evaluation Host:</b> Docker Compose (Zero Cloud Dependency)", styles['ReportBody'])
         ],
         [
             Paragraph("<b>Flagship Scenario:</b> KJSCE Garba Eve (12 Oct)", styles['ReportBody']),
-            Paragraph("<b>Evaluation Host:</b> Docker Compose (Zero Cloud Dependency)", styles['ReportBody'])
+            Paragraph("<b>Reproducibility:</b> Deterministic 100-Row Seed + 20 HTTP Workload", styles['ReportBody'])
         ]
     ]
     t_meta = Table(meta_data, colWidths=[250, 250])
@@ -259,19 +263,21 @@ def build_pdf():
         "Write-Ahead Log (WAL) archiving and Point-in-Time Recovery (PITR).<br/><br/>"
         "Under identical workloads of 100 seeded rows and 20 real HTTP bookings, an accidental DELETE removes all 40 flagship "
         "bookings. The snapshot-only baseline recovers the cluster to snapshot time (100 bookings), but completely loses all 20 post-snapshot "
-        "transactions (0% recovery of unbacked traffic). In contrast, pgBackRest replays write-ahead logs up to a pre-incident named "
-        "restore point (<code>rp_scenario_b</code>), achieving <b>100% data recovery (120/120 bookings, 20/20 new registrations preserved)</b> "
-        "with an RTO of 17.6–20.6 s. Furthermore, differential and incremental backup strategies demonstrated an 85% reduction in repository "
-        "storage footprint and an 75% reduction in execution time compared to full backups."
+        "transactions because those transactions occurred after the snapshot and the baseline deliberately has no WAL replay mechanism. "
+        "In contrast, in both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident "
+        "named restore point (<code>stagepass_before_incident_pgbackrest_run2</code>). This experiment achieved zero loss of the 20 tested registrations; "
+        "production RPO depends on WAL archival and retention. Observed recovery time (RTO) was 17.6 s in Run 1 and 20.6 s in Run 2 (differences "
+        "of 2.6 s and 10.0 s compared to snapshot-only). Furthermore, differential and incremental backup strategies demonstrated an 85% "
+        "reduction in individual backup storage footprint and over 70% reduction in execution time compared to full backups."
     )
     story.append(Paragraph(exec_summary, styles['ReportBody']))
     story.append(Spacer(1, 6))
 
     # Executive Callout
     story.append(create_callout(
-        "pgBackRest with archived WAL moves recovery from 'state at the last backup moment' to 'state at the exact pre-incident target'. "
-        "While snapshot recovery leaves an RPO gap of 20 transactions, pgBackRest achieves RPO = 0 for post-backup transactions at a marginal RTO cost of ~5 seconds.",
-        title="Key Case Study Finding",
+        "In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point. "
+        "This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention.",
+        title="Key Controlled Finding",
         styles=styles
     ))
     story.append(Spacer(1, 10))
@@ -319,7 +325,7 @@ def build_pdf():
         styles['ReportBody']
     ))
     story.append(Paragraph("1. <b>App Container (StagePass):</b> FastAPI with Jinja2 templates, serving public registration and operations monitoring endpoints. Uses short-lived database connections to survive database restarts.", styles['BulletItem']))
-    story.append(Paragraph("2. <b>DB Container:</b> PostgreSQL 17.11 configured with <code>wal_level=replica</code> and <code>archive_mode=on</code>. Runs pgBackRest 2.59.3 directly for low-latency WAL pushing.", styles['BulletItem']))
+    story.append(Paragraph("2. <b>DB Container:</b> PostgreSQL 17.11 (Host Port 5433, Container Port 5432) configured with <code>wal_level=replica</code> and <code>archive_mode=on</code>. Runs pgBackRest 2.59.3 directly for low-latency WAL pushing.", styles['BulletItem']))
     story.append(Paragraph("3. <b>Backup-Tools Container:</b> Operational sidecar with volume mounts for <code>pgdata</code>, <code>repo</code>, and <code>snapshots</code>. Executes controlled rsync snapshots and restore procedures.", styles['BulletItem']))
     story.append(Paragraph("4. <b>Storage Isolation:</b> The pgBackRest repository (<code>/var/lib/pgbackrest</code>) resides on a dedicated Docker volume separate from <code>PGDATA</code>, guaranteeing that a destructive restore never overwrites backup archives.", styles['BulletItem']))
 
@@ -329,7 +335,7 @@ def build_pdf():
         "<b>Logical Backups (pg_dump):</b> Logical backups dump database DDL and DML into SQL or custom binary archives. While highly portable and selective, "
         "they cannot replay write-ahead logs. In our benchmark, pg_dump completed in 0.3 s (0.5 MB), but can only restore the state at dump completion.<br/>"
         "<b>Physical Backups + WAL (pgBackRest):</b> Copies raw 8 KB data pages alongside a continuous stream of 16 MB WAL segments. When PostgreSQL boots in recovery "
-        "mode, it replays WAL records forward from the backup checkpoint LSN up to the requested target. This enables microsecond-level Point-in-Time Recovery.",
+        "mode, it replays WAL records forward from the backup checkpoint LSN up to the requested target. This enables Point-in-Time Recovery to a verified named restore point.",
         styles['ReportBody']
     ))
 
@@ -366,26 +372,28 @@ def build_pdf():
     story.append(Spacer(1, 8))
 
     # Section 8: Benchmarks Table
-    story.append(Paragraph("8. Backup Strategy Trade-off Benchmarks (20,000 Rows)", styles['SectionHeading']))
+    story.append(Paragraph("8. Backup Strategy Trade-off Benchmarks (20,000 Rows - Single Trial)", styles['SectionHeading']))
     story.append(Paragraph(
-        "Benchmarked on a synthetic 20,000-row dataset to evaluate time and storage compression across strategies:",
+        "Benchmarked on a synthetic 20,000-row dataset to evaluate time and storage compression across strategies (distinguishing individual backup size from cumulative repository total):",
         styles['ReportBody']
     ))
 
-    b_headers = ["Trial", "Backup Mode", "Dataset Size", "Duration (s)", "Repository Size / Notes"]
+    b_headers = ["Trial", "Backup Mode", "Rows", "Duration (s)", "Backup Size", "Cumulative Repo", "Notes"]
     b_rows = [[
-        b.get("trial", ""),
+        b.get("trial", "1"),
         b.get("backup_type", "").upper(),
-        f"{b.get('rows', '')} rows",
+        f"{b.get('rows', '')}",
         f"{b.get('duration_s', '')} s",
-        b.get("backup_label", "")
+        f"{float(b.get('backup_size_bytes', 0))/(1024*1024):.2f} MB" if float(b.get('backup_size_bytes', 0)) > 1024*1024 else f"{float(b.get('backup_size_bytes', 0))/1024:.1f} KB",
+        f"{float(b.get('repository_total_bytes_after', 0))/(1024*1024):.2f} MB",
+        b.get("notes", "")[:35] + "..." if len(b.get("notes", "")) > 35 else b.get("notes", "")
     ] for b in bench]
-    t_bench = Table([b_headers] + b_rows, colWidths=[55, 95, 80, 80, 190])
+    t_bench = Table([b_headers] + b_rows, colWidths=[35, 75, 55, 65, 75, 85, 110])
     t_bench.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), BG_NEUTRAL),
         ('TEXTCOLOR', (0, 0), (-1, -1), BLACK),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 8.5),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('ALIGN', (0, 0), (-2, -1), 'CENTER'),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_NEUTRAL),
         ('TOPPADDING', (0, 0), (-1, -1), 4),
@@ -397,11 +405,12 @@ def build_pdf():
     # Embed Plots
     plot_rec = os.path.join(ROOT, "results", "plots", "recovery_counts.png")
     plot_dur = os.path.join(ROOT, "results", "plots", "backup_durations.png")
+    plot_sto = os.path.join(ROOT, "results", "plots", "backup_storage.png")
 
     if os.path.exists(plot_rec) and os.path.exists(plot_dur):
         img_table = Table([[
-            Image(plot_rec, width=240, height=145),
-            Image(plot_dur, width=240, height=145)
+            Image(plot_rec, width=240, height=140),
+            Image(plot_dur, width=240, height=140)
         ]], colWidths=[250, 250])
         img_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -412,16 +421,24 @@ def build_pdf():
         story.append(img_table)
         story.append(Paragraph("Figure 1: Empirical booking recovery counts (Left) and backup duration benchmarks (Right).", styles['CaptionStyle']))
 
+    if os.path.exists(plot_sto):
+        story.append(Spacer(1, 4))
+        story.append(Image(plot_sto, width=320, height=180))
+        story.append(Paragraph("Figure 2: Storage comparison — Individual backup size vs Cumulative repository total.", styles['CaptionStyle']))
+
     # Section 9: Discussion & Critical Evaluation
     story.append(Paragraph("9. Synthesis, Discussion & Limitations", styles['SectionHeading']))
     story.append(Paragraph(
-        "<b>RTO vs RPO Trade-offs:</b> While rsync snapshot recovery restored the cluster in 10.6–15.0 s, it violated RPO by failing to preserve "
-        "the 20 post-snapshot registrations. pgBackRest required an extra ~5 seconds (17.6–20.6 s RTO) to replay WAL records, but delivered "
-        "an RPO of 0 data loss. In business terms, saving 20 attendee bookings far outweighs 5 seconds of additional recovery latency.<br/><br/>"
-        "<b>Threats to Validity:</b><br/>"
-        "1. <i>Local Storage Bias:</i> The pgBackRest repository was mounted locally on Docker volumes rather than remote cloud object storage (S3/GCS). Network latency in production will increase both backup duration and restore transfer times.<br/>"
-        "2. <i>Target Choice Discards Later Writes:</i> Restoring to a named restore point discards all subsequent transactions. In our lab, the incident was isolated; in production, concurrent legitimate writes occurring after the incident target would require logical extraction and reconciliation.<br/>"
-        "3. <i>Archive Lag Window:</i> True RPO is bounded by PostgreSQL's <code>archive_timeout</code> (60 seconds) and WAL shipping latency. A disaster occurring before WAL segments reach the repository would result in data loss unless synchronous replication or <code>pg_receivewal</code> is deployed.",
+        "<b>RTO vs RPO Trade-offs:</b> While rsync snapshot recovery restored the cluster in 10.6 s & 15.0 s, it lost the 20 post-snapshot "
+        "registrations because those transactions occurred after the snapshot and the baseline deliberately has no WAL replay mechanism. "
+        "PITR required longer recovery times, with observed differences of 2.6 seconds (Run 1: 17.6 s vs 15.0 s) and 10.0 seconds (Run 2: 20.6 s vs 10.6 s). "
+        "Two runs illustrate the trade-off between snapshot-only restoration and full WAL replay to a verified target. "
+        "In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point. "
+        "This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival lag and retention availability.<br/><br/>"
+        "<b>Threats to Validity & Limitations:</b><br/>"
+        "1. <i>Local Storage Bias:</i> The pgBackRest repository was mounted locally on Docker volumes rather than remote cloud object storage. Network latency in production will increase transfer times.<br/>"
+        "2. <i>Single Trial Benchmark:</i> Backup mode benchmark figures represent a single controlled trial rather than a multi-trial statistical median.<br/>"
+        "3. <i>Archive Lag Window:</i> True production RPO is bounded by PostgreSQL's <code>archive_timeout</code> (60 seconds) and WAL shipping latency.",
         styles['ReportBody']
     ))
     story.append(Spacer(1, 6))
