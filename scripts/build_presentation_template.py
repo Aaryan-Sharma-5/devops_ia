@@ -281,7 +281,7 @@ def build_presentation():
         ],
         [
             {"text": "• Zero Post-Snapshot Visibility:\n", "bold": True, "size": 10.5, "color": RED},
-            {"text": "Without archived write-ahead logs, any transaction written at T + 1 is permanently unrecoverable.\n\n", "size": 10, "color": TEXT_BODY}
+            {"text": "Without archived write-ahead logs, any transaction written at T + 1 is unrecoverable from this snapshot-only baseline without a separate WAL recovery mechanism.\n\n", "size": 10, "color": TEXT_BODY}
         ],
         [
             {"text": "• Realistic Industry Scope:\n", "bold": True, "size": 10.5, "color": SLATE_DARK},
@@ -358,9 +358,9 @@ def build_presentation():
     s7.shapes.title.text = "Backup Automation & Self-Documenting Named PITR"
 
     modes = [
-        {"name": "FULL BACKUP", "dur": "10.6 s", "size": "4.5 MB", "ratio": "Base", "desc": "Individual backup: 4.5 MB (cumulative repo: 12.1 MB). Complete physical copy + active WAL.", "color": MAROON},
-        {"name": "DIFFERENTIAL", "dur": "2.5 s", "size": "697.7 KB", "ratio": "84.5% Saving", "desc": "Individual backup: 697.7 KB (cumulative repo: 14.3 MB). Copies pages modified since last Full.", "color": SAFFRON},
-        {"name": "INCREMENTAL", "dur": "3.0 s", "size": "635.8 KB", "ratio": "85.9% Saving", "desc": "Individual backup: 635.8 KB (cumulative repo: 16.3 MB). Copies changes since preceding backup.", "color": EMERALD}
+        {"name": "FULL BACKUP", "dur": "10.6 s", "size": "4.50 MiB", "ratio": "Base", "desc": "Individual backup: 4.50 MiB. Cumulative repo: 11.58 MiB (12.1 MB decimal; du -sb). Complete physical copy + active WAL.", "color": MAROON},
+        {"name": "DIFFERENTIAL", "dur": "2.5 s", "size": "697.7 KiB", "ratio": "84.5% Saving", "desc": "Individual backup: 697.7 KiB. Cumulative repo: 13.67 MiB (14.3 MB decimal). Copies pages modified since last Full.", "color": SAFFRON},
+        {"name": "INCREMENTAL", "dur": "3.0 s", "size": "635.8 KiB", "ratio": "85.9% Saving", "desc": "Individual backup: 635.8 KiB. Cumulative repo: 15.53 MiB (16.3 MB decimal). Copies changes since preceding backup.", "color": EMERALD}
     ]
     for i, m in enumerate(modes):
         x = 0.92 + i * 3.90
@@ -381,7 +381,7 @@ def build_presentation():
             {"text": "Plants a named restore point: SELECT pg_create_restore_point('stagepass_before_incident_pgbackrest_run2');\n", "size": 10, "color": TEXT_BODY}
         ],
         [
-            {"text": "• Guaranteed Archival Gate: ", "bold": True, "size": 10, "color": EMERALD},
+            {"text": "• Verified WAL Archival Gate: ", "bold": True, "size": 10, "color": EMERALD},
             {"text": "Timeline-aware check verifies WAL segment reached repository disk before proceeding with restore.\n", "size": 10, "color": TEXT_BODY}
         ],
         [
@@ -390,7 +390,7 @@ def build_presentation():
         ]
     ])
 
-    set_slide_note(s7, "Distinguish individual backup size (4.5MB/698KB/636KB) from cumulative repo size (12.1MB/14.3MB/16.3MB). Highlight named restore point and archival safety gate.")
+    set_slide_note(s7, "Distinguish individual backup size (4.50 MiB/697.7 KiB/635.8 KiB) from cumulative repo size (11.58 MiB/13.67 MiB/15.53 MiB binary; 12.1 MB/14.3 MB/16.3 MB decimal via du -sb). Highlight named restore point and verified WAL archival gate.")
 
     # ==============================================================
     # SLIDE 8: STAGEPASS CONTROLS & METHODOLOGY
@@ -464,9 +464,9 @@ def build_presentation():
     # Right Column: Metric Callout Cards
     add_card(s9, 7.25, 1.85, 5.15, 1.85, bg_color=RED_BG, border_color=RED_BORDER)
     add_formatted_text(s9, 7.25, 1.85, 5.15, 1.85, [
-        {"text": "TRANSACTIONS PRESERVED (RPO)", "size": 10, "bold": True, "color": RED, "space_after": 2},
+        {"text": "POST-SNAPSHOT REGISTRATIONS RECOVERED", "size": 9.5, "bold": True, "color": RED, "space_after": 2},
         {"text": "0 / 20 (0%)", "size": 36, "bold": True, "color": RED, "space_after": 2},
-        {"text": "20 Legitimate Registrations Permanently Lost", "size": 10.5, "bold": True, "color": SLATE_DARK}
+        {"text": "20 Legitimate Registrations Lost (RPO Breach)", "size": 10, "bold": True, "color": SLATE_DARK}
     ])
 
     add_card(s9, 7.25, 3.90, 5.15, 1.85, bg_color=LIGHT_GRAY_BG)
@@ -481,12 +481,12 @@ def build_presentation():
             {"text": "Run 1 = 15.0 s  |  Run 2 = 10.6 s\n", "size": 10, "color": TEXT_BODY}
         ],
         [
-            {"text": "• Architectural Scope: ", "bold": True, "size": 10, "color": RED},
-            {"text": "Fast recovery, but snapshot lacks WAL replay mechanism by design.", "size": 10, "color": TEXT_BODY}
+            {"text": "• Recovery Point (RPO): ", "bold": True, "size": 10, "color": RED},
+            {"text": "All 20 post-snapshot registrations lost; baseline lacks WAL replay.", "size": 10, "color": TEXT_BODY}
         ]
     ])
 
-    set_slide_note(s9, "Snapshot, 20 registrations, DELETE, restore: back to 100, Garba 20, zero of the new twenty survive. Baseline snapshot contains no post-snapshot WAL replay.")
+    set_slide_note(s9, "Post-snapshot registrations recovered: 0/20. Snapshot, 20 registrations, DELETE, restore: back to 100, Garba 20, zero of the new twenty survive. Baseline snapshot contains no post-snapshot WAL replay.")
 
     # ==============================================================
     # SLIDE 10: SCENARIO B RESULT (PGBACKREST PITR)
@@ -523,9 +523,9 @@ def build_presentation():
     # Right Column: Metric Callout Cards
     add_card(s10, 7.25, 1.85, 5.15, 1.85, bg_color=CARD_BG, border_color=EMERALD_BORDER)
     add_formatted_text(s10, 7.25, 1.85, 5.15, 1.85, [
-        {"text": "TRANSACTIONS PRESERVED (TEST)", "size": 10, "bold": True, "color": EMERALD, "space_after": 2},
+        {"text": "POST-BACKUP REGISTRATIONS RECOVERED", "size": 9.5, "bold": True, "color": EMERALD, "space_after": 2},
         {"text": "20 / 20 (100%)", "size": 36, "bold": True, "color": EMERALD, "space_after": 2},
-        {"text": "Zero Loss of Tested Registrations at Target", "size": 10.5, "bold": True, "color": SLATE_DARK}
+        {"text": "All 20 Tested Registrations Recovered at Target Point", "size": 10, "bold": True, "color": SLATE_DARK}
     ])
 
     add_card(s10, 7.25, 3.90, 5.15, 1.85, bg_color=LIGHT_GRAY_BG)
@@ -540,12 +540,12 @@ def build_presentation():
             {"text": "'recovery stopping at restore point \"stagepass_before_incident_pgbackrest_run2\"'\n", "size": 8.2, "bold": True, "color": MAROON_DARK}
         ],
         [
-            {"text": "• Production Caveat: ", "bold": True, "size": 10, "color": SLATE_DARK},
+            {"text": "• Recovery Point (RPO): ", "bold": True, "size": 10, "color": SLATE_DARK},
             {"text": "Experiment achieved zero loss; production RPO depends on WAL lag.", "size": 9.5, "color": TEXT_BODY}
         ]
     ])
 
-    set_slide_note(s10, "Full backup, 20 registrations, named restore point, verified archival, DELETE, restore to name, promote. Engine logs confirm target. All 20 IDs back.")
+    set_slide_note(s10, "Post-backup registrations recovered: 20/20. Full backup, 20 registrations, named restore point, verified archival, DELETE, restore to name, promote. Engine logs confirm target. All 20 IDs back.")
 
     # ==============================================================
     # SLIDE 11: EVALUATION & BENCHMARKS
@@ -553,12 +553,15 @@ def build_presentation():
     s11 = prs.slides.add_slide(layout_title_only)
     s11.shapes.title.text = "Quantitative Evaluation: Recovery Time & Reliability"
 
-    # Embed Plots side-by-side
-    add_card(s11, 0.92, 1.85, 5.60, 2.45)
-    add_image_safely(s11, "results/plots/recovery_counts.png", 1.02, 1.95, 5.40, 2.25)
+    # Embed 3 Plots side-by-side (Recovery Counts, Backup Durations, Backup Storage)
+    add_card(s11, 0.92, 1.85, 3.65, 2.45)
+    add_image_safely(s11, "results/plots/recovery_counts.png", 1.02, 1.95, 3.45, 2.25)
 
-    add_card(s11, 6.82, 1.85, 5.60, 2.45)
-    add_image_safely(s11, "results/plots/backup_durations.png", 6.92, 1.95, 5.40, 2.25)
+    add_card(s11, 4.84, 1.85, 3.65, 2.45)
+    add_image_safely(s11, "results/plots/backup_durations.png", 4.94, 1.95, 3.45, 2.25)
+
+    add_card(s11, 8.76, 1.85, 3.65, 2.45)
+    add_image_safely(s11, "results/plots/backup_storage.png", 8.86, 1.95, 3.45, 2.25)
 
     # Bottom Summary Table / Card
     add_card(s11, 0.92, 4.45, 11.50, 1.30, bg_color=LIGHT_GRAY_BG)
@@ -569,12 +572,12 @@ def build_presentation():
             {"text": "Snapshot restores in 10.6 s & 15.0 s vs pgBackRest in 17.6 s & 20.6 s (observed differences: +2.6 s in Run 1 and +10.0 s in Run 2 for full WAL replay).\n", "size": 9.5, "color": TEXT_BODY}
         ],
         [
-            {"text": "• Storage & Backup Modes (Single Trial): ", "bold": True, "size": 9.5, "color": SLATE_DARK},
-            {"text": "Individual backup size: Full = 4.5 MB, Diff = 697.7 KB, Incr = 635.8 KB (vs cumulative repo size: 12.1 MB, 14.3 MB, 16.3 MB). Diff/Incr save >84% backup footprint.", "size": 9.5, "color": TEXT_BODY}
+            {"text": "• Storage & Backup Modes (20k rows): ", "bold": True, "size": 9.5, "color": SLATE_DARK},
+            {"text": "The benchmark table occupied approximately 3.9 MiB of PostgreSQL relation storage; pgBackRest reported a 33.5 MB database size for the cluster used in the backup measurement. Individual backups: Full = 4.50 MiB, Diff = 697.7 KiB, Incr = 635.8 KiB (cumulative repo totals via du -sb: 11.58 MiB [12.1 MB decimal], 13.67 MiB [14.3 MB decimal], 15.53 MiB [16.3 MB decimal]).", "size": 9.2, "color": TEXT_BODY}
         ]
     ])
 
-    set_slide_note(s11, "RTO differs by seconds: observed run deltas of 2.6s and 10.0s. Storage chart distinguishes individual backup size from cumulative repository size.")
+    set_slide_note(s11, "Display all three empirical plots: recovery counts, backup duration, and storage comparison. Highlight that table relation size is ~3.9 MiB while pgBackRest cluster DB size is 33.5 MB. Contrast individual backup sizes (4.50 MiB, 697.7 KiB, 635.8 KiB) against cumulative repository growth measured via du -sb (11.58 MiB / 12.1 MB to 15.53 MiB / 16.3 MB).")
 
     # ==============================================================
     # SLIDE 12: CONCLUSION, VALIDITY & REFERENCES

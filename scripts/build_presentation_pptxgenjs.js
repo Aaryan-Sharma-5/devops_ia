@@ -418,7 +418,7 @@ async function buildPresentation() {
       { text: '• Consistent Point-in-Time Image:\n', options: { bold: true } },
       { text: 'PostgreSQL daemon is cleanly stopped; PGDATA files mirrored with rsync -aHAX --delete.\n\n' },
       { text: '• Zero Post-Snapshot Visibility:\n', options: { bold: true, color: COLORS.RED } },
-      { text: 'The snapshot freezes state at Time T. Without active WAL capture, any transaction written at T + 1 is permanently unrecoverable.\n\n' },
+      { text: 'The snapshot freezes state at Time T. Without active WAL capture, any transaction written at T + 1 is unrecoverable from this snapshot-only baseline without a separate WAL recovery mechanism.\n\n' },
       { text: '• Fair Experimental Scope:\n', options: { bold: true } },
       { text: 'Rsync with manual WAL archival could do more, but enterprise teams frequently rely on storage snapshots alone—believing they suffice for disaster recovery.' }
     ], {
@@ -702,7 +702,7 @@ async function buildPresentation() {
     slide.addText([
       { text: '• Elimination of Clock Skew: ', options: { bold: true } },
       { text: 'Instead of ambiguous timestamps, we plant a named restore point via SELECT pg_create_restore_point(\'rp_scenario_b\');\n' },
-      { text: '• Guaranteed Archival Gate: ', options: { bold: true, color: COLORS.EMERALD } },
+      { text: '• Verified WAL Archival Gate: ', options: { bold: true, color: COLORS.EMERALD } },
       { text: 'Recovery script queries WAL segment archives and refuses to restore until the exact LSN is proven safely written to repository disk.\n' },
       { text: '• Precise Target Recovery: ', options: { bold: true } },
       { text: 'pgbackrest restore --type=name --target=rp_scenario_b --target-action=promote replays up to the point and reopens DB for read-write.' }
@@ -829,9 +829,9 @@ async function buildPresentation() {
 
     // Right Column: Metric Callout Cards
     addCard(slide, 7.1, 1.7, 5.4, 2.4, COLORS.RED_BG, 'FECACA');
-    slide.addText('TRANSACTIONS PRESERVED (RPO)', { x: 7.4, y: 1.9, w: 4.8, h: 0.3, fontSize: 11, bold: true, color: COLORS.RED });
+    slide.addText('POST-SNAPSHOT REGISTRATIONS RECOVERED', { x: 7.4, y: 1.9, w: 4.8, h: 0.3, fontSize: 10, bold: true, color: COLORS.RED });
     slide.addText('0 / 20 (0%)', { x: 7.4, y: 2.2, w: 4.8, h: 0.9, fontSize: 44, bold: true, color: COLORS.RED });
-    slide.addText('20 Legitimate Registrations Permanently Lost', { x: 7.4, y: 3.2, w: 4.8, h: 0.4, fontSize: 12, bold: true, color: COLORS.TEXT_DARK });
+    slide.addText('20 Legitimate Registrations Lost (RPO Breach)', { x: 7.4, y: 3.2, w: 4.8, h: 0.4, fontSize: 12, bold: true, color: COLORS.TEXT_DARK });
 
     addCard(slide, 7.1, 4.4, 5.4, 2.5, COLORS.SURFACE_CARD, COLORS.BORDER_CARD);
     slide.addText('MEASURED TIME METRICS (RUN 1 & 2)', { x: 7.4, y: 4.6, w: 4.8, h: 0.3, fontSize: 11, bold: true, color: COLORS.MAROON });
@@ -841,8 +841,8 @@ async function buildPresentation() {
       { text: '0.5 s – 1.1 s (local storage copy)\n\n' },
       { text: '• Recovery Time Objective (RTO): ', options: { bold: true } },
       { text: '10.6 s – 15.0 s\n\n' },
-      { text: '• Verdict: ', options: { bold: true, color: COLORS.RED } },
-      { text: 'Fast recovery, but unacceptable RPO breach for active online services.' }
+      { text: '• Recovery Point (RPO): ', options: { bold: true, color: COLORS.RED } },
+      { text: 'All 20 post-snapshot registrations lost; baseline lacks WAL replay.' }
     ], {
       x: 7.4,
       y: 5.0,
@@ -853,7 +853,7 @@ async function buildPresentation() {
       lineSpacing: 18
     });
 
-    slide.addNotes('Snapshot, 20 registrations, DELETE, restore: back to 100, Garba 20, zero of the new twenty survive. Correct behavior for snapshot alone, but lossy.');
+    slide.addNotes('Post-snapshot registrations recovered: 0/20. Snapshot, 20 registrations, DELETE, restore: back to 100, Garba 20, zero of the new twenty survive. Baseline snapshot contains no post-snapshot WAL replay.');
   }
 
   // ==========================================
@@ -862,7 +862,7 @@ async function buildPresentation() {
   {
     const slide = pptx.addSlide();
     slide.background = { color: COLORS.SURFACE_LIGHT };
-    addHeader(slide, 'Scenario B: pgBackRest with Archived WAL (100% Recovery)');
+    addHeader(slide, 'Scenario B: pgBackRest with Archived WAL (Target Reached)');
 
     // Left Column: Result Breakdown
     addCard(slide, 0.8, 1.7, 6.0, 5.2, COLORS.EMERALD_BG, 'A7F3D0');
@@ -900,21 +900,21 @@ async function buildPresentation() {
 
     // Right Column: Metric Callout Cards
     addCard(slide, 7.1, 1.7, 5.4, 2.4, COLORS.SURFACE_CARD, 'A7F3D0');
-    slide.addText('TRANSACTIONS PRESERVED (RPO)', { x: 7.4, y: 1.9, w: 4.8, h: 0.3, fontSize: 11, bold: true, color: COLORS.EMERALD });
+    slide.addText('POST-BACKUP REGISTRATIONS RECOVERED', { x: 7.4, y: 1.9, w: 4.8, h: 0.3, fontSize: 10, bold: true, color: COLORS.EMERALD });
     slide.addText('20 / 20 (100%)', { x: 7.4, y: 2.2, w: 4.8, h: 0.9, fontSize: 44, bold: true, color: COLORS.EMERALD });
-    slide.addText('Zero Data Loss • All Transaction IDs Intact', { x: 7.4, y: 3.2, w: 4.8, h: 0.4, fontSize: 12, bold: true, color: COLORS.TEXT_DARK });
+    slide.addText('All 20 Tested Registrations Recovered at Target Point', { x: 7.4, y: 3.2, w: 4.8, h: 0.4, fontSize: 12, bold: true, color: COLORS.TEXT_DARK });
 
     addCard(slide, 7.1, 4.4, 5.4, 2.5, COLORS.SURFACE_CARD, COLORS.BORDER_CARD);
     slide.addText('PERFORMANCE & AUDIT VALIDATION', { x: 7.4, y: 4.6, w: 4.8, h: 0.3, fontSize: 11, bold: true, color: COLORS.MAROON });
 
     slide.addText([
       { text: '• Recovery Time Objective (RTO): ', options: { bold: true } },
-      { text: '17.6 s – 20.6 s (only ~5s more than snapshot)\n\n' },
+      { text: '17.6 s – 20.6 s (observed run deltas: +2.6 s & +10.0 s for WAL replay)\n\n' },
       { text: '• Engine Confirmation: ', options: { bold: true } },
       { text: 'PostgreSQL engine log explicitly confirms:\n' },
       { text: '  "recovery stopping at restore point \"rp_scenario_b\""\n\n', options: { fontFace: 'Courier New', fontSize: 10, bold: true, color: COLORS.MAROON } },
-      { text: '• Reproducibility: ', options: { bold: true } },
-      { text: '100% verified across both independent experimental runs.' }
+      { text: '• Recovery Point (RPO): ', options: { bold: true } },
+      { text: 'Experiment achieved zero loss; production RPO depends on WAL lag.' }
     ], {
       x: 7.4,
       y: 5.0,
@@ -925,7 +925,7 @@ async function buildPresentation() {
       lineSpacing: 17
     });
 
-    slide.addNotes('Full backup, 20 registrations, named restore point, verified archival, DELETE, restore to name, promote. Engine logs confirm target. All 20 IDs back.');
+    slide.addNotes('Post-backup registrations recovered: 20/20. Full backup, 20 registrations, named restore point, verified archival, DELETE, restore to name, promote. Engine logs confirm target. All 20 IDs back.');
   }
 
   // ==========================================
@@ -934,20 +934,26 @@ async function buildPresentation() {
   {
     const slide = pptx.addSlide();
     slide.background = { color: COLORS.SURFACE_LIGHT };
-    addHeader(slide, 'Quantitative Evaluation: RTO, RPO & Storage Trade-offs');
+    addHeader(slide, 'Quantitative Evaluation: Recovery Time & Reliability');
 
-    // Embed Generated Plots Side-by-Side
+    // Embed 3 Generated Plots Side-by-Side
     const plotRecovery = path.join(ROOT, 'results', 'plots', 'recovery_counts.png');
     const plotBackup = path.join(ROOT, 'results', 'plots', 'backup_durations.png');
+    const plotStorage = path.join(ROOT, 'results', 'plots', 'backup_storage.png');
 
     if (fs.existsSync(plotRecovery)) {
-      addCard(slide, 0.8, 1.7, 5.7, 3.5);
-      slide.addImage({ path: plotRecovery, x: 0.9, y: 1.8, w: 5.5, h: 3.3 });
+      addCard(slide, 0.8, 1.7, 3.7, 3.5);
+      slide.addImage({ path: plotRecovery, x: 0.9, y: 1.8, w: 3.5, h: 3.3 });
     }
 
     if (fs.existsSync(plotBackup)) {
-      addCard(slide, 6.8, 1.7, 5.7, 3.5);
-      slide.addImage({ path: plotBackup, x: 6.9, y: 1.8, w: 5.5, h: 3.3 });
+      addCard(slide, 4.8, 1.7, 3.7, 3.5);
+      slide.addImage({ path: plotBackup, x: 4.9, y: 1.8, w: 3.5, h: 3.3 });
+    }
+
+    if (fs.existsSync(plotStorage)) {
+      addCard(slide, 8.8, 1.7, 3.7, 3.5);
+      slide.addImage({ path: plotStorage, x: 8.9, y: 1.8, w: 3.5, h: 3.3 });
     }
 
     // Bottom Comparative Summary Table
@@ -965,11 +971,11 @@ async function buildPresentation() {
 
     slide.addText([
       { text: '• RTO Comparison: ', options: { bold: true } },
-      { text: 'Snapshot RTO is 10.6–15.0 s vs pgBackRest PITR at 17.6–20.6 s (a modest ~5–7 s difference for WAL replay).\n' },
-      { text: '• RPO Comparison: ', options: { bold: true } },
-      { text: 'Snapshot loses 20 transactions (100% loss of unbacked traffic); pgBackRest achieves 0 data loss.\n' },
-      { text: '• Storage Optimization: ', options: { bold: true } },
-      { text: 'Differential and incremental modes slash routine backup time from 10.6 s down to 2.5–3.0 s, saving >84% repository space.' }
+      { text: 'Snapshot RTO is 10.6–15.0 s vs pgBackRest PITR at 17.6–20.6 s (observed differences: +2.6 s in Run 1 and +10.0 s in Run 2 for full WAL replay).\n' },
+      { text: '• Recovered Registrations: ', options: { bold: true } },
+      { text: 'Snapshot-only recovers 0/20 registrations; pgBackRest recovers 20/20 tested registrations at target restore point.\n' },
+      { text: '• Storage Distinction: ', options: { bold: true } },
+      { text: 'The benchmark table occupied approximately 3.9 MiB of PostgreSQL relation storage; pgBackRest reported a 33.5 MB database size for the cluster used in the backup measurement. Individual backups: Full = 4.5 MB, Diff = 697.7 KB, Incr = 635.8 KB.' }
     ], {
       x: 1.1,
       y: 5.85,
@@ -980,7 +986,7 @@ async function buildPresentation() {
       lineSpacing: 16
     });
 
-    slide.addNotes('RTO differs by seconds (11-15s vs 18-21s). Recoverability differs by 20 transactions. Point at the charts: real benchmark numbers from CSV.');
+    slide.addNotes('Display all three empirical plots: recovery counts, backup duration, and storage comparison. Highlight that table relation size is ~3.9 MiB while pgBackRest cluster DB size is 33.5 MB. Contrast individual backup sizes against cumulative repository growth.');
   }
 
   // ==========================================

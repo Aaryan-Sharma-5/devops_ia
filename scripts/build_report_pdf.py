@@ -140,64 +140,64 @@ def build_pdf():
     styles.add(ParagraphStyle(
         name='SectionHeading',
         fontName='Helvetica-Bold',
-        fontSize=13,
-        leading=17,
+        fontSize=12,
+        leading=15,
         textColor=BLACK,
-        spaceBefore=14,
-        spaceAfter=6,
+        spaceBefore=10,
+        spaceAfter=4,
         keepWithNext=True
     ))
     styles.add(ParagraphStyle(
         name='SubSectionHeading',
         fontName='Helvetica-Bold',
-        fontSize=10.5,
-        leading=14,
+        fontSize=10,
+        leading=13,
         textColor=BLACK,
-        spaceBefore=8,
-        spaceAfter=4,
+        spaceBefore=7,
+        spaceAfter=3,
         keepWithNext=True
     ))
     styles.add(ParagraphStyle(
         name='ReportBody',
         fontName='Helvetica',
-        fontSize=9.5,
-        leading=13.5,
+        fontSize=9.2,
+        leading=12.8,
         textColor=BLACK,
-        spaceAfter=6
+        spaceAfter=5
     ))
     styles.add(ParagraphStyle(
         name='BulletItem',
         fontName='Helvetica',
-        fontSize=9.5,
-        leading=13.5,
+        fontSize=9.2,
+        leading=12.8,
         textColor=BLACK,
         leftIndent=15,
         firstLineIndent=-10,
-        spaceAfter=3
+        spaceAfter=2.5
     ))
     styles.add(ParagraphStyle(
         name='CalloutTitle',
         fontName='Helvetica-Bold',
-        fontSize=10,
+        fontSize=9.5,
         leading=12,
         textColor=BLACK
     ))
     styles.add(ParagraphStyle(
         name='CalloutBody',
         fontName='Helvetica',
-        fontSize=9,
-        leading=13,
+        fontSize=8.8,
+        leading=12.2,
         textColor=BLACK
     ))
     styles.add(ParagraphStyle(
         name='CaptionStyle',
         fontName='Helvetica',
-        fontSize=8.5,
-        leading=11,
+        fontSize=8,
+        leading=10,
         textColor=BLACK,
         alignment=1,
-        spaceBefore=4,
-        spaceAfter=10
+        spaceBefore=3,
+        spaceAfter=6
     ))
 
     story = []
@@ -384,11 +384,11 @@ def build_pdf():
         b.get("backup_type", "").upper(),
         f"{b.get('rows', '')}",
         f"{b.get('duration_s', '')} s",
-        f"{float(b.get('backup_size_bytes', 0))/(1024*1024):.2f} MB" if float(b.get('backup_size_bytes', 0)) > 1024*1024 else f"{float(b.get('backup_size_bytes', 0))/1024:.1f} KB",
-        f"{float(b.get('repository_total_bytes_after', 0))/(1024*1024):.2f} MB",
-        b.get("notes", "")[:35] + "..." if len(b.get("notes", "")) > 35 else b.get("notes", "")
+        f"{float(b.get('backup_size_bytes', 0))/(1024*1024):.2f} MiB" if float(b.get('backup_size_bytes', 0)) > 1024*1024 else f"{float(b.get('backup_size_bytes', 0))/1024:.1f} KiB",
+        f"{float(b.get('repository_total_bytes_after', 0))/(1024*1024):.2f} MiB",
+        "Base physical copy (100% data)" if b.get("backup_type") == "full" else ("5% rows modified (id%20==0)" if b.get("backup_type") == "differential" else "5% rows modified (id%20==7)")
     ] for b in bench]
-    t_bench = Table([b_headers] + b_rows, colWidths=[35, 75, 55, 65, 75, 85, 110])
+    t_bench = Table([b_headers] + b_rows, colWidths=[30, 95, 50, 55, 65, 80, 129])
     t_bench.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), BG_NEUTRAL),
         ('TEXTCOLOR', (0, 0), (-1, -1), BLACK),
@@ -396,11 +396,18 @@ def build_pdf():
         ('FONTSIZE', (0, 0), (-1, -1), 8),
         ('ALIGN', (0, 0), (-2, -1), 'CENTER'),
         ('GRID', (0, 0), (-1, -1), 0.5, BORDER_NEUTRAL),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(t_bench)
-    story.append(Spacer(1, 10))
+    story.append(Spacer(1, 3))
+    story.append(Paragraph(
+        "<i>Note: The benchmark table occupied approximately 3.9 MiB of PostgreSQL relation storage (pg_total_relation_size('bench_payload') ≈ 3,896 KiB); pgBackRest reported a 33.5 MB database size for the cluster used in the backup measurement. Individual backup size measures the new data delta (Full: 4.50 MiB, Diff: 697.7 KiB, Incr: 635.8 KiB). Cumulative repository size reflects total disk footprint measured via du -sb /var/lib/pgbackrest immediately post-backup: Full = 11.58 MiB (12.1 MB decimal; 12,137,779 bytes), Diff = 13.67 MiB (14.3 MB decimal; 14,338,561 bytes), Incr = 15.53 MiB (16.3 MB decimal; 16,284,776 bytes).</i>",
+        styles['CaptionStyle']
+    ))
+    story.append(Spacer(1, 4))
 
     # Embed Plots
     plot_rec = os.path.join(ROOT, "results", "plots", "recovery_counts.png")
@@ -409,21 +416,21 @@ def build_pdf():
 
     if os.path.exists(plot_rec) and os.path.exists(plot_dur):
         img_table = Table([[
-            Image(plot_rec, width=240, height=140),
-            Image(plot_dur, width=240, height=140)
+            Image(plot_rec, width=240, height=135),
+            Image(plot_dur, width=240, height=135)
         ]], colWidths=[250, 250])
         img_table.setStyle(TableStyle([
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 2),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+            ('TOPPADDING', (0, 0), (-1, -1), 1),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
         ]))
         story.append(img_table)
         story.append(Paragraph("Figure 1: Empirical booking recovery counts (Left) and backup duration benchmarks (Right).", styles['CaptionStyle']))
 
     if os.path.exists(plot_sto):
-        story.append(Spacer(1, 4))
-        story.append(Image(plot_sto, width=320, height=180))
+        story.append(PageBreak())
+        story.append(Image(plot_sto, width=320, height=170))
         story.append(Paragraph("Figure 2: Storage comparison — Individual backup size vs Cumulative repository total.", styles['CaptionStyle']))
 
     # Section 9: Discussion & Critical Evaluation
@@ -438,7 +445,7 @@ def build_pdf():
         "<b>Threats to Validity & Limitations:</b><br/>"
         "1. <i>Local Storage Bias:</i> The pgBackRest repository was mounted locally on Docker volumes rather than remote cloud object storage. Network latency in production will increase transfer times.<br/>"
         "2. <i>Single Trial Benchmark:</i> Backup mode benchmark figures represent a single controlled trial rather than a multi-trial statistical median.<br/>"
-        "3. <i>Archive Lag Window:</i> True production RPO is bounded by PostgreSQL's <code>archive_timeout</code> (60 seconds) and WAL shipping latency.",
+        "3. <i>Archive Lag & Retention:</i> The configured archive timeout is 60 seconds. Actual recoverability depends on WAL archival success, archive lag, shipping latency, and retention. The experiment verified that the target segment was available before restoration.",
         styles['ReportBody']
     ))
     story.append(Spacer(1, 6))

@@ -117,10 +117,17 @@ def main():
             x = range(len(types))
             w = 0.35
             plt.figure(figsize=(7.5, 4.5))
-            plt.bar([i - w / 2 for i in x], backup_sizes_mb, w, label="Individual Backup Size (MB)", color="#e0683c")
-            plt.bar([i + w / 2 for i in x], repo_totals_mb, w, label="Cumulative Repository Total (MB)", color="#5b1a2e")
+            b1 = plt.bar([i - w / 2 for i in x], backup_sizes_mb, w, label="Individual Backup Size (MiB)", color="#e0683c")
+            b2 = plt.bar([i + w / 2 for i in x], repo_totals_mb, w, label="Cumulative Repository Total (MiB)", color="#5b1a2e")
+            for bar in b1:
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width() / 2.0, yval + 0.2, f"{yval:.2f} MiB", ha='center', va='bottom', fontsize=8, color='#334155')
+            for bar in b2:
+                yval = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width() / 2.0, yval + 0.2, f"{yval:.2f} MiB", ha='center', va='bottom', fontsize=8, color='#334155')
             plt.xticks(list(x), [t.capitalize() for t in types])
-            plt.ylabel("Size (MB)")
+            plt.ylabel("Size (MiB)")
+            plt.ylim(0, max(repo_totals_mb) * 1.15)
             plt.title("pgBackRest Storage: Backup Size vs Cumulative Repository Size")
             plt.legend()
             plt.tight_layout()

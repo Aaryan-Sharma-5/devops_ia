@@ -283,7 +283,7 @@ def main():
         ["Point-in-Time Recovery relies on specifying a deterministic stopping boundary:",
          "• Ambiguity of Timestamps: Time-based targets (recovery_target_time) are vulnerable to NTP clock skew and sub-second transaction interleaving.",
          "• Named Restore Points: Executing SELECT pg_create_restore_point('rp_name'); writes an explicit marker directly into the WAL stream with an identifiable Log Sequence Number (LSN).",
-         "• Guaranteed Archival Gate: The recovery coordinator asserts that the segment containing the restore point LSN has reached the repository disk before initiating recovery."])
+         "• Verified WAL Archival Gate: The recovery coordinator asserts that the segment containing the restore point LSN has reached the repository disk before initiating recovery."])
 
     sec("14. System Architecture Diagram",
         ["Multi-container environment topology:",
@@ -355,12 +355,12 @@ def main():
 
     sec("21. Backup-Mode and Dump Benchmarks",
         ["Empirical benchmark on 20,000 synthetic rows (single trial measurements):",
-         "• Full Backup: 10.6 s duration, 4.5 MB individual backup size (4,718,592 bytes), 12.1 MB cumulative repository total (12,137,779 bytes).",
-         "• Differential Backup: 2.5 s duration (76% faster), 697.7 KB individual backup size (714,445 bytes; 84.5% delta saving), 14.3 MB cumulative repository total (14,338,561 bytes).",
-         "• Incremental Backup: 3.0 s duration (71% faster), 635.8 KB individual backup size (651,059 bytes; 85.9% delta saving), 16.3 MB cumulative repository total (16,284,776 bytes).",
+         "• Full Backup: 10.6 s duration, 4.50 MiB individual backup size (4,718,592 bytes), 11.58 MiB cumulative repository total (12.1 MB decimal; 12,137,779 bytes measured via du -sb /var/lib/pgbackrest).",
+         "• Differential Backup: 2.5 s duration (76% faster), 697.7 KiB individual backup size (714,445 bytes; 84.5% delta saving), 13.67 MiB cumulative repository total (14.3 MB decimal; 14,338,561 bytes).",
+         "• Incremental Backup: 3.0 s duration (71% faster), 635.8 KiB individual backup size (651,059 bytes; 85.9% delta saving), 15.53 MiB cumulative repository total (16.3 MB decimal; 16,284,776 bytes).",
          "• Logical pg_dump: 0.3 s runtime, 0.5 MB dump size, but zero WAL replay capability.",
-         "Storage Metric Distinction: Individual backup size measures the new data delta captured in that specific backup set, "
-         "whereas cumulative repository size reflects the total disk space occupied by the entire pgBackRest repository including all previous backups and archived WAL files."])
+         "Storage Measurements & Metric Distinction: The benchmark table occupied approximately 3.9 MiB of PostgreSQL relation storage (pg_total_relation_size('bench_payload') ≈ 3,896 KiB); pgBackRest reported a 33.5 MB database size for the cluster used in the backup measurement. "
+         "Individual backup size measures the new compressed data delta captured in that specific backup set (Full: 4.50 MiB, Diff: 697.7 KiB, Incr: 635.8 KiB), whereas cumulative repository size reflects the total disk space occupied by the entire pgBackRest repository measured via du -sb /var/lib/pgbackrest immediately post-backup: Full = 11.58 MiB (12.1 MB decimal; 12,137,779 bytes), Diff = 13.67 MiB (14.3 MB decimal; 14,338,561 bytes), Incr = 15.53 MiB (16.3 MB decimal; 16,284,776 bytes)."])
 
     h22 = doc.add_heading("22. Results Tables and Charts (Real Data)", level=1)
     for r in h22.runs:
@@ -385,16 +385,24 @@ def main():
 
     add_table(doc, ["Trial", "Backup Mode", "Rows", "Duration (s)", "Backup Size", "Cumulative Repo", "Notes"],
               [[b.get("trial", "1"), b.get("backup_type", "").upper(), b.get("rows", ""), b.get("duration_s", ""),
-                f"{float(b.get('backup_size_bytes', 0))/(1024*1024):.2f} MB" if float(b.get('backup_size_bytes', 0)) > 1024*1024 else f"{float(b.get('backup_size_bytes', 0))/1024:.1f} KB",
-                f"{float(b.get('repository_total_bytes_after', 0))/(1024*1024):.2f} MB",
-                b.get("notes", "")] for b in bench])
+                f"{float(b.get('backup_size_bytes', 0))/(1024*1024):.2f} MiB" if float(b.get('backup_size_bytes', 0)) > 1024*1024 else f"{float(b.get('backup_size_bytes', 0))/1024:.1f} KiB",
+                f"{float(b.get('repository_total_bytes_after', 0))/(1024*1024):.2f} MiB",
+                "Base physical backup (100% data)" if b.get("backup_type") == "full" else ("5% rows modified (id%20==0)" if b.get("backup_type") == "differential" else "5% rows modified (id%20==7)")] for b in bench])
+
+    p_note = "Note: The benchmark table occupied approximately 3.9 MiB of PostgreSQL relation storage (pg_total_relation_size('bench_payload') ≈ 3,896 KiB); pgBackRest reported a 33.5 MB database size for the cluster used in the backup measurement. Individual backup size measures the new compressed data delta (Full: 4.50 MiB, Diff: 697.7 KiB, Incr: 635.8 KiB). Cumulative repository size reflects total disk footprint measured via du -sb /var/lib/pgbackrest immediately post-backup: Full = 11.58 MiB (12.1 MB decimal; 12,137,779 bytes), Diff = 13.67 MiB (14.3 MB decimal; 14,338,561 bytes), Incr = 15.53 MiB (16.3 MB decimal; 16,284,776 bytes)."
+    p_t_note = doc.add_paragraph()
+    r_t_note = p_t_note.add_run(p_note)
+    r_t_note.font.italic = True
+    r_t_note.font.color.rgb = BLACK
+    md_sections.append(f"*{p_note}*\n")
 
     md_sections.append("| Trial | Backup Mode | Rows | Duration (s) | Backup Size | Cumulative Repo | Notes |")
     md_sections.append("|---|---|---|---|---|---|---|")
     for b in bench:
-        bs_str = f"{float(b.get('backup_size_bytes', 0))/(1024*1024):.2f} MB" if float(b.get('backup_size_bytes', 0)) > 1024*1024 else f"{float(b.get('backup_size_bytes', 0))/1024:.1f} KB"
-        repo_str = f"{float(b.get('repository_total_bytes_after', 0))/(1024*1024):.2f} MB"
-        md_sections.append(f"| {b.get('trial', '1')} | {b.get('backup_type', '').upper()} | {b.get('rows', '')} | {b.get('duration_s', '')} | {bs_str} | {repo_str} | {b.get('notes', '')} |")
+        bs_str = f"{float(b.get('backup_size_bytes', 0))/(1024*1024):.2f} MiB" if float(b.get('backup_size_bytes', 0)) > 1024*1024 else f"{float(b.get('backup_size_bytes', 0))/1024:.1f} KiB"
+        repo_str = f"{float(b.get('repository_total_bytes_after', 0))/(1024*1024):.2f} MiB"
+        note_str = "Base physical backup (100% data)" if b.get("backup_type") == "full" else ("5% rows modified (id%20==0)" if b.get("backup_type") == "differential" else "5% rows modified (id%20==7)")
+        md_sections.append(f"| {b.get('trial', '1')} | {b.get('backup_type', '').upper()} | {b.get('rows', '')} | {b.get('duration_s', '')} | {bs_str} | {repo_str} | {note_str} |")
     md_sections.append("")
 
     for img, cap in [("results/plots/recovery_counts.png", "Figure 3 — Booking counts per experimental run."),
@@ -426,11 +434,11 @@ def main():
          "Across recorded runs, PITR RTO was 17.6 s (Run 1) and 20.6 s (Run 2), compared to 15.0 s and 10.6 s for snapshot recovery.",
          "• Recovery Point Objective (RPO): In both recorded PITR trials, all 20 post-backup registrations were recovered by restoring to the verified pre-incident named restore point. "
          "This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival and retention. "
-         "Under continuous archiving, the exposure window is bounded by archive_timeout (60 seconds) and shipping latency."])
+         "The configured archive timeout is 60 seconds. Actual recoverability depends on WAL archival success, archive lag, shipping latency, and retention. The experiment verified that the target segment was available before restoration."])
 
     sec("26. Threats to Validity and Limitations",
         ["Academic rigor requires stating threats to validity:",
-         "• Construct Validity: RPO in production is influenced by network latency and disk I/O; local Docker volumes eliminate network jitter.",
+         "• Construct Validity: RPO in production is influenced by network latency and disk I/O; local Docker volumes eliminate network jitter. Actual recoverability depends on WAL archival success, archive lag, shipping latency, and retention.",
          "• Internal Validity: Named restore points discard transactions committed after the target; concurrent non-incident writes require manual isolation.",
          "• External Validity: Benchmark dataset (20,000 rows) represents medium-scale tables; multi-terabyte production instances require multi-core compression tuning.",
          "• Single Trial Limitation: Backup mode benchmarks represent a single measured trial rather than a multi-trial statistical median."])

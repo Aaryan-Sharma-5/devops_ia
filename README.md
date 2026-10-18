@@ -317,13 +317,13 @@ Source of truth: `docs/RESULTS.md` + `results/`. Summary of measured runs (host 
 | rsync-run1 / run2 | snapshot-only, no WAL | 100 → 120 → **100** | **0/20 lost** | ~1 s | ~15 / ~11 s |
 | pgbackrest-run1 / run2 | full + named PITR | 100 → 120 → **120** | **20/20** | ~13 / ~7 s | ~18 / ~21 s |
 
-Backup modes (20 000-row bench table, `pg_total_relation_size` ≈ 3.9 MB):
-full **10.6 s / 4.5 MB** → differential **2.5 s / 697.7 KB** → incremental **3.0 s / 635.8 KB**
-(sizes = pgBackRest-reported compressed repo bytes; DB size 33.5 MB reported separately).
+The benchmark table occupied approximately 3.9 MiB of PostgreSQL relation storage (`pg_total_relation_size('bench_payload')`); pgBackRest reported a 33.5 MB database size for the cluster used in the backup measurement. Individual backups:
+full **10.6 s / 4.50 MiB** → differential **2.5 s / 697.7 KiB** → incremental **3.0 s / 635.8 KiB**
+(cumulative repository totals via `du -sb /var/lib/pgbackrest`: 11.58 MiB [12.1 MB decimal], 13.67 MiB [14.3 MB decimal], 15.53 MiB [16.3 MB decimal]).
 `pg_dump -Fc`: 0.3 s, 507 577 bytes, `pg_restore --clean` 1.4 s, selective restore yes, WAL
 replay no. Retention demo: `expire --repo1-retention-full=1` removed only the orphaned full in
 the lab repo (`results/logs/pgbackrest-expire-demo.txt`). Charts
-(`results/plots/recovery_counts.png`, `backup_durations.png`) are generated from the CSVs by
+(`results/plots/recovery_counts.png`, `backup_durations.png`, `backup_storage.png`) are generated from the CSVs by
 `scripts/compare.py`.
 
 ---

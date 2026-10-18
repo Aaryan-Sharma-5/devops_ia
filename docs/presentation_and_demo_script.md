@@ -45,23 +45,23 @@ Note: FastAPI uses request-scoped database sessions, surviving cleanly when Post
 
 ## Slide 7 — Backup modes + named PITR (1.5 min)
 Say: “In our single-trial benchmark: Full took 10.6 s, Differential took 2.5 s, and Incremental took 3.0 s.
-Storage distinction: Individual backup sets measured 4.5 MB for Full, 697.7 KB for Differential, and 635.8 KB for Incremental.
-Cumulative repository total grew from 12.1 MB to 14.3 MB and 16.3 MB. Differential and incremental modes cut routine backup storage by >84%.
+Storage distinction: Individual backup sets measured 4.50 MiB for Full, 697.7 KiB for Differential, and 635.8 KiB for Incremental.
+Cumulative repository total grew from 11.58 MiB (12.1 MB decimal) to 13.67 MiB (14.3 MB decimal) and 15.53 MiB (16.3 MB decimal) measured via `du -sb /var/lib/pgbackrest`. Differential and incremental modes cut routine backup storage by >84%.
 For disaster recovery, we plant a named restore point in WAL: `stagepass_before_incident_pgbackrest_run2`.
-Our harness verifies the required WAL segment exists in `/var/lib/pgbackrest/archive/` and checks timeline ordering before allowing restore.”
+Our Verified WAL Archival Gate verifies the required WAL segment exists in repository storage before allowing restore.”
 
 ## Slide 8 — StagePass controls & repeatability (1 min)
 Show homepage `/`: 12 OCT badge, Register Now modal, live operations status pill.
 Say: “Deterministic 100-row seed; identical 20 HTTP POST registrations via `scripts/workload.py`; repeated across Run 1 and Run 2.”
 
 ## Slide 9 — Scenario A result (Snapshot Baseline) (1.5 min)
-Say: “Snapshot taken at 100 bookings. 20 registrations arrive (count 120). Unbounded DELETE wipes Garba.
+Say: “Post-snapshot registrations recovered: 0 / 20 (0%). Snapshot taken at 100 bookings. 20 registrations arrive (count 120). Unbounded DELETE wipes Garba.
 Rsync snapshot restored: database returns to 100 bookings, Garba 20. Exactly zero of the 20 new registrations survived.
 The baseline snapshot deliberately has no WAL replay mechanism. Recovery took 15.0 s in Run 1 and 10.6 s in Run 2.”
 
 ## Slide 10 — Scenario B result (pgBackRest PITR) (2 min)
-Say: “Full backup taken at 100 bookings. Same 20 registrations arrive. Named restore point `stagepass_before_incident_pgbackrest_run2` planted.
-Archival gate confirms segment on disk. Unbounded DELETE wipes Garba.
+Say: “Post-backup registrations recovered: 20 / 20 (100%). Full backup taken at 100 bookings. Same 20 registrations arrive. Named restore point `stagepass_before_incident_pgbackrest_run2` planted.
+Verified WAL Archival Gate confirms segment on disk. Unbounded DELETE wipes Garba.
 pgBackRest restores the base physical backup and replays WAL forward to the restore point target.
 PostgreSQL engine recovery log explicitly records: `recovery stopping at restore point \"stagepass_before_incident_pgbackrest_run2\"`.
 All 120 bookings, 40 Garba, and 20 new registrations recovered intact.
@@ -69,7 +69,8 @@ Recovery Time (RTO): 17.6 s in Run 1 and 20.6 s in Run 2 (observed deltas of +2.
 Key qualification: This experiment achieved zero loss of the 20 tested registrations; production RPO depends on WAL archival lag and retention.”
 
 ## Slide 11 — Quantitative Evaluation & Benchmarks (1 min)
-Say: “Point at the comparison plots from real CSVs.
+Say: “Point at all three empirical comparison plots from real CSVs: recovery counts, backup durations, and the storage chart.
+Notice the storage distinction: the benchmark table occupied ~3.9 MiB of relation storage, while pgBackRest reported a 33.5 MB cluster database size.
 RTO observed differences were 2.6 s and 10.0 s to achieve complete transaction recovery.
 Storage chart distinguishes individual backup delta from cumulative repository total.
 Single trial limitation: benchmark represents one measured run, not a multi-trial median.”
